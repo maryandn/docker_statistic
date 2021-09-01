@@ -3,9 +3,9 @@ version: "3.3"
 services:
   nginx:
     build: ./nginx
-    container_name: ng02
+    container_name: ng03
     ports:
-      - 1400:80
+      - 1500:80
     volumes:
       - static:/app/static
     depends_on:
@@ -14,17 +14,17 @@ services:
   app:
     build:
       context: .
-    container_name: app02
+    container_name: app03
     expose:
       - 8000
     volumes:
-      - ./epg_django:/app
+      - ./flussonic_stat:/app
       - static:/app/static
     environment:
-      - DB_NAME=epg_db
-      - MYSQL_USER=docker-user
+      - DB_NAME=flussonic_stat
+      - MYSQL_USER=flussonic-user
       - MYSQL_PASSWORD=test
-      - SECRET_KEY=Er8nyD~&!4B^e6H4!#N~m4t8VCrL^f27
+      - SECRET_KEY=django-insecure-s(3l57qop!^xrvmkq59xqxdr=4l(&24z)p9oaa32ptfd*x(6s8
     restart: unless-stopped
     depends_on:
       - db
@@ -32,11 +32,11 @@ services:
       sh -c "python manage.py runserver 0.0.0.0:8000"
 
   db:
-    container_name: db02
+    container_name: db03
     image: mysql:8.0
     environment:
-      MYSQL_DATABASE: 'epg_db'
-      MYSQL_USER: 'docker-user'
+      MYSQL_DATABASE: 'flussonic_stat'
+      MYSQL_USER: 'flussonic-user'
       MYSQL_PASSWORD: 'test'
       MYSQL_ROOT_PASSWORD: 'superpassword'
     restart: always
