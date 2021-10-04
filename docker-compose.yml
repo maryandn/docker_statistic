@@ -7,7 +7,7 @@ services:
     ports:
       - 1500:80
     volumes:
-      - static:/app/static
+      - ./flussonic_stat/static:/app/static
     depends_on:
       - app
 
@@ -19,7 +19,7 @@ services:
       - 8000
     volumes:
       - ./flussonic_stat:/app
-      - static:/app/static
+      - ./flussonic_stat/static:/app/static
     environment:
       - DB_NAME=flussonic_stat
       - MYSQL_USER=flussonic-user
