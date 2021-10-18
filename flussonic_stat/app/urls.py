@@ -20,7 +20,7 @@ from django.views.generic import TemplateView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('stat/', include('statistic.urls')),
-    path('notify/', include('notify.urls'))
+    path('notify/', include('notify_session.urls'))
 ]
 
 urlpatterns += [re_path(r'^.*', TemplateView.as_view(template_name='index.html'))]
