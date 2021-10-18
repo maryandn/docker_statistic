@@ -25,7 +25,6 @@ class StatusSessionsView(APIView):
     def post(self, request):
 
         data = request.data[0]
-        print('----1----', request.data)
 
         try:
             del data['access'], data['active'], data['auth_time'], data['current_time'], data['delete_time'], data[

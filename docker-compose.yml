@@ -33,7 +33,7 @@ services:
 
   db:
     container_name: db03
-    image: mysql:8.0
+    image: mysql:8.0.23
     environment:
       MYSQL_DATABASE: 'flussonic_stat'
       MYSQL_USER: 'flussonic-user'

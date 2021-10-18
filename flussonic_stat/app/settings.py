@@ -40,7 +40,8 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'statistic',
-    'notify_session'
+    'notify_session',
+    'drf_multiple_model',
 ]
 
 MIDDLEWARE = [
