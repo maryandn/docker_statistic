@@ -1,7 +1,4 @@
 from django.db.models import Sum
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import api_view
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework import status, generics
@@ -12,7 +9,6 @@ from statistic.serializers import SessionSerializer
 import requests
 from itertools import groupby
 import datetime
-import json
 
 
 def canonicalize_dict(x):
@@ -24,29 +20,29 @@ def unique_and_count(lst):
     return [dict(k + [("count", len(list(g)))]) for k, g in grouper]
 
 
-@csrf_exempt
-def notify(request):
-    print(json.loads(request.body))
-    return HttpResponse('')
-
-
 class TokenStatView(generics.ListAPIView):
     serializer_class = SessionSerializer
     permission_classes = [AllowAny]
 
-    def get(self, request, *args, **kwargs):
-
+    def get_queryset(self):
         base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
         date_list = [base_unix_time - x * 60000 for x in range(24 * 60)]
 
+        result = SessionModel.objects.filter(time__in=date_list)
+        return result
+
+    def get(self, request, *args, **kwargs):
+        base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
+        date_list = [base_unix_time - x * 60000 for x in range(24 * 60)]
+
+        qs = self.get_queryset()
         token_or_ip = kwargs.get('pk')
 
         if token_or_ip.count('.') == 3 and all(0 <= int(num) < 256 for num in token_or_ip.rstrip().split('.')):
-            result = SessionModel.objects.filter(ip=token_or_ip, time__in=date_list).values_list('time').annotate(
+            result = qs.filter(ip=token_or_ip).values_list('time').annotate(
                 count=Sum('count')).order_by('time')
 
             diff = list(set(date_list) - set([i[0] for i in list(result)]))
-
             result = list(result)
 
             for i in diff:
@@ -55,11 +51,10 @@ class TokenStatView(generics.ListAPIView):
             result.sort(key=lambda tup: tup[0])
 
         else:
-            result = SessionModel.objects.filter(token=token_or_ip, time__in=date_list).values_list('time').annotate(
+            result = qs.filter(token=token_or_ip).values_list('time').annotate(
                 count=Sum('count')).order_by('time')
 
             diff = list(set(date_list) - set([i[0] for i in list(result)]))
-
             result = list(result)
 
             for i in diff:
@@ -110,6 +105,11 @@ class GetStatView(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
+            base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
+            date_for_del = base_unix_time - 172800000
+
+            print(date_for_del)
+
             list_ip = ['50.7.136.26', '51.195.4.225', '51.195.7.141', '145.239.140.7']
             dict_for_count = []
 
@@ -138,6 +138,9 @@ class GetStatView(APIView):
             if not serializer.is_valid():
                 return Response(serializer.errors)
             serializer.save()
+
+            session = SessionModel.objects.filter(time__lt=date_for_del)
+            session.delete()
 
             return Response(serializer.data)
 

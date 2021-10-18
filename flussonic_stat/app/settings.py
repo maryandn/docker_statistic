@@ -40,7 +40,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'statistic',
-    'notify'
+    'notify_session'
 ]
 
 MIDDLEWARE = [

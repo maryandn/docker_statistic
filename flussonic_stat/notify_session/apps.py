@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class NotifyConfig(AppConfig):
+class NotifySessionConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'notify'
+    name = 'notify_session'
