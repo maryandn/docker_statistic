@@ -3,6 +3,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework import status, generics
 from rest_framework.response import Response
+from rest_framework.renderers import JSONRenderer
 from statistic.models import SessionModel
 from statistic.serializers import SessionSerializer
 
@@ -21,6 +22,7 @@ def unique_and_count(lst):
 
 
 class TokenStatView(generics.ListAPIView):
+    renderer_classes = [JSONRenderer]
     serializer_class = SessionSerializer
     permission_classes = [AllowAny]
 
