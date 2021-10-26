@@ -6,6 +6,7 @@ class StatusSessionModel(models.Model):
         verbose_name = 'Сессия'
         verbose_name_plural = 'Сессии'
         db_table = 'notify_session'
+        ordering = ['created_at']
 
     bytes_sent = models.BigIntegerField(blank=True)
     country = models.CharField(max_length=2, blank=True)
