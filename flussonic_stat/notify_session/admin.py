@@ -1,3 +1,12 @@
 from django.contrib import admin
 
-# Register your models here.
+from notify_session.models import StatusSessionModel
+
+
+@admin.register(StatusSessionModel)
+class StatusSessionAdmin(admin.ModelAdmin):
+    list_display = ('user_id', 'token', 'media', 'type', 'ip', 'created_at', 'deleted_at', 'bytes_sent',)
+    search_fields = ('token',)
+
+    def get_name_service(self, obj):
+        return obj.media.name_service
