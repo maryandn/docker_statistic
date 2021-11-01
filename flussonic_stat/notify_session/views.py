@@ -7,10 +7,12 @@ from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 import json
+import requests
 
 from notify_session.models import StatusSessionModel
 from notify_session.serializers import SessionOpenedSerializer, SessionClosedSerializer, \
     OpenedSessionsForBillingSerializer
+from utils.get_client_ip import get_client_ip
 
 
 @csrf_exempt
@@ -25,6 +27,7 @@ class StatusSessionsView(APIView):
     def post(self, request):
 
         data = request.data[0]
+        ip = get_client_ip(request)
 
         try:
             del data['access'], data['active'], data['auth_time'], data['current_time'], data['delete_time'], data[
@@ -33,8 +36,20 @@ class StatusSessionsView(APIView):
                 'user_name'], data['utc_ms'], data['referer']
 
             if data['event'] == 'session_opened':
-                del data['event']
+                del data['event'], data['ip']
                 data['deleted_at'] = 1
+
+                user_id = data.get('user_id')
+                name = data.get('media')
+                session_id_from_data = data.get('session_id')
+
+                res = requests.get(
+                    f'http://admin:qwertystream@{ip}:89/flussonic/api/sessions?user_id={user_id}&name={name}').json()
+                list_sessions = res.get('sessions')
+                qs_from_api = list(filter(lambda session: session['session_id'] == session_id_from_data, list_sessions))[0]
+
+                data['ip'] = qs_from_api.get('ip')
+
                 serializer = SessionOpenedSerializer(data=data)
                 if not serializer.is_valid():
                     return Response(serializer.errors)
@@ -72,7 +87,7 @@ class OpenedClosedSessionsView(ObjectMultipleModelAPIView):
              'serializer_class': SessionOpenedSerializer,
              'label': 'opened'
              },
-            {'queryset': StatusSessionModel.objects.filter(token=token, deleted_at__gt=2),
+            {'queryset': StatusSessionModel.objects.filter(token=token, deleted_at__gt=2).order_by('-deleted_at'),
              'serializer_class': SessionOpenedSerializer,
              'label': 'closed'
              }

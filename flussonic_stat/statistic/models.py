@@ -8,6 +8,7 @@ class SessionModel(models.Model):
 
     time = models.BigIntegerField()
     name = models.CharField(max_length=16)
+    session_id = models.CharField(max_length=55)
     source = models.GenericIPAddressField()
     ip = models.GenericIPAddressField()
     token = models.CharField(max_length=255, blank=True)
