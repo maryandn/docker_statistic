@@ -84,7 +84,7 @@ class OpenedClosedSessionsView(ObjectMultipleModelAPIView):
 
         querylist = (
             {
-                'queryset': StatusSessionModel.objects.filter(token=token, deleted_at=1),
+                'queryset': StatusSessionModel.objects.filter(token=token, deleted_at=1).order_by('-created_at'),
                 'serializer_class': SessionOpenedSerializer,
                 'label': 'opened'
              },
