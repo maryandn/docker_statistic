@@ -83,14 +83,21 @@ class OpenedClosedSessionsView(ObjectMultipleModelAPIView):
         token = self.kwargs.get('pk')
 
         querylist = (
-            {'queryset': StatusSessionModel.objects.filter(token=token, deleted_at=1),
-             'serializer_class': SessionOpenedSerializer,
-             'label': 'opened'
+            {
+                'queryset': StatusSessionModel.objects.filter(token=token, deleted_at=1),
+                'serializer_class': SessionOpenedSerializer,
+                'label': 'opened'
              },
-            {'queryset': StatusSessionModel.objects.filter(token=token, deleted_at__gt=2).order_by('-deleted_at'),
-             'serializer_class': SessionOpenedSerializer,
-             'label': 'closed'
-             }
+            {
+                'queryset': StatusSessionModel.objects.filter(token=token, deleted_at__gt=2).order_by('-deleted_at'),
+                'serializer_class': SessionOpenedSerializer,
+                'label': 'closed'
+             },
+            {
+                'queryset': StatusSessionModel.objects.filter(token=token)[0:1],
+                'serializer_class': SessionOpenedSerializer,
+                'label': 'user_id'
+            }
         )
         return querylist
 
