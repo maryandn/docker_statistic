@@ -81,14 +81,27 @@ WSGI_APPLICATION = 'app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+def mode_db():
+    if DEBUG:
+        get_dict_env_value = {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME_LOCAL'),
+            'USER': os.environ.get('MYSQL_USER_LOCAL'),
+            'PASSWORD': os.environ.get('MYSQL_PASSWORD_LOCAL'),
+            'HOST': 'localhost',
+        }
+    else:
+        get_dict_env_value = {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME_PRODUCTIONS'),
+            'USER': os.environ.get('MYSQL_USER_PRODUCTIONS'),
+            'PASSWORD': os.environ.get('MYSQL_PASSWORD_PRODUCTIONS'),
+            'HOST': 'db',
+        }
+    return get_dict_env_value
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('MYSQL_USER'),
-        'PASSWORD': os.environ.get('MYSQL_PASSWORD'),
-        'HOST': 'db',
-    }
+    'default': mode_db()
 }
 
 # Password validation
