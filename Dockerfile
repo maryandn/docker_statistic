@@ -16,6 +16,5 @@ RUN mkdir /app/static
 
 WORKDIR /app
 COPY flussonic_stat /app
-
 RUN adduser -D user
 USER user
