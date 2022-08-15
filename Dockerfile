@@ -18,4 +18,4 @@ RUN python -m pip install --upgrade pip && pip install pipenv
 
 COPY ./flussonic_stat/Pipfile /tmp
 COPY ./flussonic_stat/Pipfile.lock /tmp
-RUN pipenv install --dev --system --deploy
+RUN cd /tmp && pipenv install --dev --system --deploy
