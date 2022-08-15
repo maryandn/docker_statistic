@@ -14,8 +14,8 @@ RUN adduser -D user
 ENV PATH="/home/user/.local/bin:${PATH}"
 USER user
 
-RUN /usr/local/bin/python -m pip install --upgrade pip && pip install --user pipenv
+RUN python -m pip install --upgrade pip && pip install pipenv
 
 COPY ./flussonic_stat/Pipfile /tmp
-RUN cd /tmp && pipenv lock --requirements > requirements.txt && pip install -r requirements.txt
-
+COPY ./flussonic_stat/Pipfile.lock /tmp
+RUN pipenv install --dev --system --deploy
