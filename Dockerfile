@@ -11,7 +11,7 @@ RUN pip install --upgrade pip && pip install pipenv
 RUN mkdir /app
 RUN mkdir /app/static
 WORKDIR /app
-COPY flussonic_stat /app
+COPY ./flussonic_stat /app
 RUN cd /tmp && pipenv lock --requirements > requirements.txt && pip install -r requirements.txt
 
 RUN adduser -D user
