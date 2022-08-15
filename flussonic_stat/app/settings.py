@@ -81,6 +81,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'app.wsgi.application'
 
+
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
@@ -102,6 +103,7 @@ def mode_db():
             'HOST': 'db',
         }
     return get_dict_env_value
+
 
 DATABASES = {
     'default': mode_db()
