@@ -33,6 +33,9 @@ services:
     image: mysql:8.0
     env_file: .env
     environment:
+      MYSQL_DATABASE: flussonic,
+      MYSQL_USER: flussonic,
+      MYSQL_PASSWORD: test,
       MYSQL_ROOT_PASSWORD: Z3>eKF;Sg^2%%"vS
     restart: always
     volumes:
