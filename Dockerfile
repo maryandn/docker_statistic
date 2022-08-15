@@ -11,6 +11,7 @@ RUN mkdir /app/static
 WORKDIR /app
 
 RUN adduser -D user
+ENV PATH="/home/user/.local/bin:${PATH}"
 USER user
 
 RUN python -m pip install --upgrade pip && pip install --user pipenv
