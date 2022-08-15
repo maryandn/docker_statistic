@@ -17,5 +17,4 @@ USER user
 RUN /usr/local/bin/python -m pip install --upgrade pip && pip install pipenv
 
 COPY ./flussonic_stat/Pipfile /tmp
-COPY ./flussonic_stat/Pipfile.lock /tmp
-RUN cd /tmp && pipenv install --deploy
+RUN cd /tmp && pipenv lock --requirements > requirements.txt && pip install -r requirements.txt
