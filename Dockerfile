@@ -1,7 +1,5 @@
 FROM python:3.8-alpine
 
-MAINTAINER Me
-
 ENV PYTHONUNBUFFERED 1
 
 RUN apk add --no-cache --virtual .build-deps gcc musl-dev mariadb-dev
