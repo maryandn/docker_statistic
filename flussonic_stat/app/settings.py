@@ -99,7 +99,7 @@ def mode_db():
             'NAME': os.environ.get('DB_NAME_PRODUCTIONS'),
             'USER': os.environ.get('MYSQL_USER_PRODUCTIONS'),
             'PASSWORD': os.environ.get('MYSQL_PASSWORD_PRODUCTIONS'),
-            'HOST': 'db03',
+            'HOST': 'db',
         }
     return get_dict_env_value
 
