@@ -111,7 +111,7 @@ DATABASES = {
             'ENGINE': 'django.db.backends.mysql',
             'NAME': 'flussonic',
             'USER': 'flussonic',
-            'PASSWORD': 'test',
+            'PASSWORD': 'testtest',
             'HOST': 'db',
         }
 }
