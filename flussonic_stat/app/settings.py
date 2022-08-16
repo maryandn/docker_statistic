@@ -104,9 +104,10 @@ def mode_db():
         }
     return get_dict_env_value
 
+dict_env_value = mode_db()
 
 DATABASES = {
-    'default': mode_db()
+    'default': dict_env_value
 }
 
 # Password validation
