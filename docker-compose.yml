@@ -35,7 +35,7 @@ services:
       MYSQL_DATABASE: flussonic,
       MYSQL_USER: flussonic,
       MYSQL_PASSWORD: testtest,
-      MYSQL_ROOT_PASSWORD: supper
+      MYSQL_ROOT_PASSWORD: supperpuper
     restart: always
     volumes:
     - ./db_django:/var/lib/mysql
