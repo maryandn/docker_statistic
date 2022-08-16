@@ -30,7 +30,7 @@ services:
 
   db:
     container_name: db03
-    image: mysql:5.7
+    image: mysql:8.0
     environment:
       MYSQL_DATABASE: flussonic,
       MYSQL_USER: flussonic,
