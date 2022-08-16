@@ -107,7 +107,13 @@ def mode_db():
 dict_env_value = mode_db()
 
 DATABASES = {
-    'default': dict_env_value
+    'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME_PRODUCTIONS'),
+            'USER': os.environ.get('MYSQL_USER_PRODUCTIONS'),
+            'PASSWORD': os.environ.get('MYSQL_PASSWORD_PRODUCTIONS'),
+            'HOST': 'db',
+        }
 }
 
 # Password validation
