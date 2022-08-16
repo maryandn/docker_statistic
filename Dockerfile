@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED 1
 COPY ./flussonic_stat/Pipfile /tmp
 COPY ./flussonic_stat/Pipfile.lock /tmp
 
-RUN apk add --no-cache --virtual ..build-deps gcc musl-dev mariadb-dev libffi-dev
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev mariadb-dev libffi-dev
 
 RUN python -m pip install --upgrade pip && pip install pipenv
 RUN cd /tmp && pipenv install --dev --system --deploy
