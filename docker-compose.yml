@@ -21,7 +21,7 @@ services:
       - ./flussonic_stat:/app
       - ./flussonic_stat/static:/app/static
     env_file:
-      - ./flussonic_stat/.env
+      - flussonic_stat/.env
     restart: unless-stopped
     depends_on:
       - db
