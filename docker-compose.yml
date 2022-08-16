@@ -34,7 +34,7 @@ services:
     environment:
       MYSQL_DATABASE: flussonic,
       MYSQL_USER: flussonic,
-      MYSQL_PASSWORD: test,
+      MYSQL_PASSWORD: testtest,
       MYSQL_ROOT_PASSWORD: supper
     restart: always
     volumes:
