@@ -106,14 +106,7 @@ def mode_db():
 
 
 DATABASES = {
-    #'default': mode_db()
-    'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'flussonic',
-            'USER': 'flussonic',
-            'PASSWORD': 'testtest',
-            'HOST': 'db',
-        }
+    'default': mode_db()
 }
 
 # Password validation
