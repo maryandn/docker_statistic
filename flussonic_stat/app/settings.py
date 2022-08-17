@@ -12,9 +12,9 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 from django.conf.global_settings import DATETIME_INPUT_FORMATS
-from dotenv import load_dotenv, find_dotenv
+from dotenv import dotenv_values
 
-load_dotenv(find_dotenv())
+conf = dict(dotenv_values(".env"))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -89,17 +89,17 @@ def mode_db():
     if DEBUG:
         get_dict_env_value = {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('DB_NAME_LOCAL'),
-            'USER': os.environ.get('MYSQL_USER_LOCAL'),
-            'PASSWORD': os.environ.get('MYSQL_PASSWORD_LOCAL'),
+            'NAME': conf.get('DB_NAME_LOCAL'),
+            'USER': conf.get('MYSQL_USER_LOCAL'),
+            'PASSWORD': conf.get('MYSQL_PASSWORD_LOCAL'),
             'HOST': 'localhost',
         }
     else:
         get_dict_env_value = {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('DB_NAME_PRODUCTIONS'),
-            'USER': os.environ.get('MYSQL_USER_PRODUCTIONS'),
-            'PASSWORD': os.environ.get('MYSQL_PASSWORD_PRODUCTIONS'),
+            'NAME': conf.get('DB_NAME_PRODUCTIONS'),
+            'USER': conf.get('MYSQL_USER_PRODUCTIONS'),
+            'PASSWORD': conf.get('MYSQL_PASSWORD_PRODUCTIONS'),
             'HOST': 'db',
         }
     return get_dict_env_value
@@ -107,7 +107,7 @@ def mode_db():
 dict_env_value = mode_db()
 
 DATABASES = {
-    'default': dict_env_value
+    'default': mode_db()
 }
 
 # Password validation
