@@ -23,6 +23,7 @@ class ChannelListView(APIView):
     def post(self, request):
 
         data = request.data[0]
+        print(request.data)
         ip = get_client_ip(request)
 
         try:
