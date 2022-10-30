@@ -78,27 +78,43 @@ class GetStatView(APIView):
             base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
             date_for_del = base_unix_time - 172800000
 
-            list_ip = ['50.7.136.26', '51.195.4.225', '51.195.7.141', '145.239.140.7', '185.132.132.212']
+            list_ip = ['50.7.136.26', '162.19.136.10', '145.239.140.7', '185.132.132.212']
             dict_for_count = []
             dict_for_deleted = []
 
             for ip in list_ip:
                 res = requests.get(f'http://admin:qwertystream@{ip}:89/flussonic/api/sessions').json()
 
-                for i in res['sessions']:
-                    i.setdefault('source', f'{ip}')
-                    i.setdefault('token', '')
-                    i.setdefault('user_agent', '')
-                    i.setdefault('referer', '')
-                    i.setdefault('current_time', '')
-                    i.setdefault('user_id', '')
+                if res.get('sessions', False):
 
-                    del i['duration'], i['country'], i['id'], i['bytes_sent'], i['created_at'], i[
-                        'user_agent'], i[
-                        'referer'], i['type'], i['current_time']
+                    for i in res.get('sessions'):
+                        data_dict_sessions = {
+                            'source': f'{ip}',
+                            'ip': i.get('ip'),
+                            'token': i.get('token') if i.get('token') else '',
+                            'name': i.get('name'),
+                            'user_id': i.get('user_id') if i.get('user_id') else '',
+                            'session_id': i.get('session_id')
+                        }
 
-                    dict_for_count.append(i)
-                    dict_for_deleted.append(i['session_id'])
+                        dict_for_count.append(data_dict_sessions)
+                        dict_for_deleted.append(i['session_id'])
+
+                elif res.get('items', False):
+
+                    for i in res.get('items'):
+                        if i.get('type') == 'play':
+                            data_dict_items = {
+                                'source': f'{ip}',
+                                'ip': i.get('ip'),
+                                'token': i.get('token') if i.get('token') else '',
+                                'name': i.get('name'),
+                                'user_id': i.get('user_id') if i.get('user_id') else '',
+                                'session_id': i.get('id')
+                            }
+
+                            dict_for_count.append(data_dict_items)
+                            dict_for_deleted.append(i['id'])
 
             data = unique_and_count(dict_for_count)
 
@@ -111,8 +127,7 @@ class GetStatView(APIView):
 
             res_for_deleted_at = list(set(no_deleted) - set(dict_for_deleted))
 
-            status_deleted_at = StatusSessionModel.objects.filter(session_id__in=res_for_deleted_at).update(
-                deleted_at=base_unix_time)
+            StatusSessionModel.objects.filter(session_id__in=res_for_deleted_at).update(deleted_at=base_unix_time)
 
             session = SessionModel.objects.filter(time__lt=date_for_del)
             session.delete()

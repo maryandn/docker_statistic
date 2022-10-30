@@ -41,7 +41,7 @@ class StatusSessionsView(APIView):
                         'media': data.get('media'),
                         'session_id': data.get('id'),
                         'token': data.get('token'),
-                        'type': data.get('proto'),
+                        'type': 'mpegts' if data.get('proto') == 'tshttp' else data.get('proto'),
                         'user_agent': data.get('user_agent'),
                         'user_id': data.get('user_id')
                     }
