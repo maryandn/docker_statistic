@@ -9,7 +9,7 @@ class StatusSessionModel(models.Model):
         ordering = ['created_at']
 
     bytes_sent = models.BigIntegerField(blank=True)
-    country = models.CharField(max_length=2, blank=True)
+    country = models.CharField(max_length=4, blank=True)
     created_at = models.BigIntegerField()
     deleted_at = models.BigIntegerField(blank=True)
     ip = models.GenericIPAddressField()
