@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'statistic',
     'notify_channel',
     'notify_session',
+    'notify_stream',
 ]
 
 MIDDLEWARE = [

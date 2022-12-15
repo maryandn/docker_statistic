@@ -5,6 +5,7 @@ import datetime
 class SessionModel(models.Model):
     class Meta:
         db_table = 'statistic'
+        verbose_name_plural = 'Статистика'
 
     time = models.BigIntegerField()
     name = models.CharField(max_length=16)
