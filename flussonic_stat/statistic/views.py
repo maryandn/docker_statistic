@@ -78,7 +78,7 @@ class GetStatView(APIView):
             base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
             date_for_del = base_unix_time - 172800000
 
-            list_ip = ['50.7.136.26', '162.19.136.10', '145.239.140.7', '185.132.132.212']
+            list_ip = ['50.7.89.234', '162.19.136.10', '145.239.140.7', '185.132.132.212']
             dict_for_count = []
             dict_for_deleted = []
 
