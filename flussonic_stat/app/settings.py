@@ -28,7 +28,7 @@ TOKEN_TG = conf.get('TOKEN_TG')
 CHAT_ID_TG = conf.get('CHAT_ID_TG')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
