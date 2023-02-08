@@ -136,3 +136,11 @@ class GetStatView(APIView):
 
         except TimeoutError:
             print('Timeout')
+
+
+class StatForUserConnectionsView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        token = kwargs.get('token')
+        msg = {'status': token}
+        return Response(msg, status.HTTP_200_OK)

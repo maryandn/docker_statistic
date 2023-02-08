@@ -24,9 +24,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = conf.get('SECRET_KEY')
+TOKEN_TG = conf.get('TOKEN_TG')
+CHAT_ID_TG = conf.get('CHAT_ID_TG')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -47,6 +49,7 @@ INSTALLED_APPS = [
     'notify_channel',
     'notify_session',
     'notify_stream',
+    'monitoring'
 ]
 
 MIDDLEWARE = [

@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('stat/', include('statistic.urls')),
+    path('monitoring/', include('monitoring.urls')),
     path('notify_session/', include('notify_session.urls')),
     path('notify_channel/', include('notify_channel.urls')),
     path('notify_stream/', include('notify_stream.urls')),
