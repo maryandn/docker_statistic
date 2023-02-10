@@ -8,7 +8,7 @@ class ChannelAstraModel(models.Model):
         verbose_name_plural = 'Астра каналы'
 
     name_channel = models.CharField(unique=True, max_length=255)
-    id_astra = models.CharField(unique=True, max_length=4)
+    id_astra = models.CharField(max_length=4)
     ip_server = models.GenericIPAddressField()
 
 
