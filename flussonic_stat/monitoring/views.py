@@ -39,12 +39,12 @@ class AstraMonitoringView(APIView):
             response = requests.get(f'http://{ip}:321/playlist.m3u8')
             res = response.text.splitlines()
             res.pop(0)
-            res = ' '.join(res)[1:].split('#')
+            res = ''.join(res)[1:].split('#')
             list_id_astra = []
             for item in res:
                 item_separator = item.find('http')
-                name_channel = item[10:item_separator][:-1]
-                id_channel = item[item_separator + 30:item_separator + 34]
+                name_channel = item[10:item_separator]
+                id_channel = item[-15:-11]
                 list_id_astra.append(id_channel)
                 data_item = {
                     'name_channel': name_channel,
