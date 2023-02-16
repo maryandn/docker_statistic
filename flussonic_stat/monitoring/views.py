@@ -36,7 +36,7 @@ class AstraMonitoringView(APIView):
         all_keys = set().union(*(d.keys() for d in request.data))
         ip = get_client_ip(request)
         if 'channel' in all_keys:
-            response = requests.get(f'http://{ip}:321/playlist.m3u8')
+            response = requests.get(f'https://{ip}:321/playlist.m3u8')
             res = response.text.splitlines()
             res.pop(0)
             res = ''.join(res)[1:].split('#')

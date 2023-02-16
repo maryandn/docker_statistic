@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from drf_multiple_model.views import ObjectMultipleModelAPIView
@@ -67,11 +68,11 @@ class StatusSessionsView(APIView):
                         del_session_for_user.delete()
 
                 elif data['event'] == 'session_opened':
-
                     user_id = data.get('user_id')
                     media = data.get('media')
                     session_id = data.get('session_id')
-                    res = requests.get(f'http://admin:qwertystream@{ip}:89/flussonic/api/sessions?user_id={user_id}&name={media}')
+                    res = requests.get(
+                        f'http://admin:qwertystream@{ip}:89/flussonic/api/sessions?user_id={user_id}&name={media}')
                     obj = next(item for item in res.json()['sessions'] if item["session_id"] == session_id)
 
                     data_to_save = {
@@ -88,14 +89,12 @@ class StatusSessionsView(APIView):
                         'user_agent': data.get('user_agent'),
                         'user_id': user_id
                     }
-
                     serializer = SessionOpenedSerializer(data=data_to_save)
                     if not serializer.is_valid():
                         return Response(serializer.errors)
                     serializer.save()
 
                 elif data['event'] == 'session_closed':
-
                     session_id = data['session_id']
                     if data['token'].find('?utc=') > 0:
                         data['token'] = data['token'].split('?utc=')[0]
@@ -148,3 +147,13 @@ class OpenedSessionsForBillingView(ListAPIView):
         token = self.kwargs.get('pk')
         qs = self.model.objects.filter(token=token, deleted_at=1)
         return qs
+
+
+class StatForUserConnectionsView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        token = kwargs.get('token')
+        qs = StatusSessionModel.objects.filter(token=token, deleted_at=1)
+        all_count = qs.count()
+        data = qs.values('ip').annotate(count=Count('ip'))
+        return Response({'all_count': all_count, 'data': data}, status.HTTP_200_OK)
