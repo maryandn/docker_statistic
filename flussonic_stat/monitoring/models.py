@@ -21,3 +21,4 @@ class OnAirStatusModel(models.Model):
     timestamp = models.BigIntegerField()
     channel_id = models.ForeignKey(ChannelAstraModel, on_delete=models.CASCADE)
     onair = models.BooleanField()
+    count = models.IntegerField()

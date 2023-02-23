@@ -19,10 +19,9 @@ class AstraMonitoringView(APIView):
         url = f'https://api.telegram.org/{settings.TOKEN_TG}/sendMessage'
         chat_id = settings.CHAT_ID_TG
         timestamp_now = int(datetime.utcnow().timestamp())
-        qs_for_tg = OnAirStatusModel.objects.filter(timestamp__gt=timestamp_now - 60)
+        qs_for_tg = OnAirStatusModel.objects.filter(timestamp__gt=timestamp_now - 61)
         if qs_for_tg.exists():
-            res = qs_for_tg.values('channel_id__name_channel', 'channel_id__ip_server').annotate(
-                count=Count('channel_id__name_channel'))
+            res = qs_for_tg.values('channel_id__name_channel', 'channel_id__ip_server', 'count')
             text = "\n".join(
                 [item['channel_id__ip_server'] + ' - ' + item[
                     'channel_id__name_channel'] + ' - ' + 'потеряных пакетов' + ' - ' + str(item['count']) for item in
@@ -35,10 +34,6 @@ class AstraMonitoringView(APIView):
     def post(self, request):
         all_keys = set().union(*(d.keys() for d in request.data))
         ip = get_client_ip(request)
-        url = f'https://api.telegram.org/{settings.TOKEN_TG}/sendMessage'
-        chat_id = settings.CHAT_ID_TG
-
-        requests.post(url, data={'chat_id': chat_id, 'text': f'{ip} request'})
         try:
             if 'channel' in all_keys:
                 response = requests.get(f'http://{ip}:321/playlist.m3u8')
@@ -63,7 +58,7 @@ class AstraMonitoringView(APIView):
             elif 'dvb_id' in all_keys:
                 print('++dvb++', all_keys)
             elif 'onair' in all_keys:
-                keys = ['onair', 'timestamp', 'channel_id']
+                keys = ['onair', 'timestamp', 'channel_id', 'count']
                 data_keys = [{k: item[k] for k in keys} for item in request.data if item['onair'] == False]
                 if data_keys:
                     get_channel_from_request = list(set([i['channel_id'] for i in data_keys]))
