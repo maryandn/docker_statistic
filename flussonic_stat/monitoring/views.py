@@ -74,6 +74,7 @@ class AstraMonitoringView(APIView):
         else:
             url = f'https://api.telegram.org/{settings.TOKEN_TG}/sendMessage'
             chat_id = settings.CHAT_ID_TG
-            requests.post(url, data={'chat_id': chat_id, 'text': 'Incorrect request'})
+            ip = get_client_ip(request)
+            requests.post(url, data={'chat_id': chat_id, 'text': f'{ip} Incorrect request'})
 
         return Response(status.HTTP_200_OK)
