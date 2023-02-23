@@ -1,7 +1,6 @@
 import requests
 
 from datetime import datetime
-from django.db.models import Count
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,15 +8,12 @@ from rest_framework.response import Response
 from monitoring.models import ChannelAstraModel, OnAirStatusModel
 from monitoring.serializers import OnAirStatusSerializer
 from utils.get_client_ip import get_client_ip
-
-from django.conf import settings
+from utils.tg_send_message import send_message_to_tg
 
 
 class AstraMonitoringView(APIView):
 
     def get(self, request):
-        url = f'https://api.telegram.org/{settings.TOKEN_TG}/sendMessage'
-        chat_id = settings.CHAT_ID_TG
         timestamp_now = int(datetime.utcnow().timestamp())
         qs_for_tg = OnAirStatusModel.objects.filter(timestamp__gt=timestamp_now - 61)
         if qs_for_tg.exists():
@@ -26,7 +22,7 @@ class AstraMonitoringView(APIView):
                 [item['channel_id__ip_server'] + ' - ' + item[
                     'channel_id__name_channel'] + ' - ' + 'потеряных пакетов' + ' - ' + str(item['count']) for item in
                  res])
-            requests.post(url, data={'chat_id': chat_id, 'text': text})
+            send_message_to_tg(text)
 
         OnAirStatusModel.objects.filter(timestamp__lt=timestamp_now - 86400).delete()
         return Response(status.HTTP_200_OK)
@@ -72,15 +68,11 @@ class AstraMonitoringView(APIView):
                     return Response(serializer.errors)
                 serializer.save()
             else:
-                url = f'https://api.telegram.org/{settings.TOKEN_TG}/sendMessage'
-                chat_id = settings.CHAT_ID_TG
-                ip = get_client_ip(request)
-                requests.post(url, data={'chat_id': chat_id, 'text': f'{ip} Incorrect request'})
+                text = f'{ip} Incorrect request'
+                send_message_to_tg(text)
         except Exception as e:
             print(e)
-            url = f'https://api.telegram.org/{settings.TOKEN_TG}/sendMessage'
-            chat_id = settings.CHAT_ID_TG
-            ip = get_client_ip(request)
-            requests.post(url, data={'chat_id': chat_id, 'text': f'{ip} Exceptions request'})
+            text = f'{ip} Exceptions request'
+            send_message_to_tg(text)
 
         return Response(status.HTTP_200_OK)
