@@ -35,6 +35,10 @@ class AstraMonitoringView(APIView):
     def post(self, request):
         all_keys = set().union(*(d.keys() for d in request.data))
         ip = get_client_ip(request)
+        url = f'https://api.telegram.org/{settings.TOKEN_TG}/sendMessage'
+        chat_id = settings.CHAT_ID_TG
+
+        requests.post(url, data={'chat_id': chat_id, 'text': f'{ip} request'})
         try:
             if 'channel' in all_keys:
                 response = requests.get(f'http://{ip}:321/playlist.m3u8')
