@@ -57,7 +57,7 @@ class AstraMonitoringView(APIView):
             qs.delete()
         elif 'dvb_id' in all_keys:
             print('++dvb++', all_keys)
-        else:
+        elif 'onair' in all_keys:
             keys = ['onair', 'timestamp', 'channel_id']
             data_keys = [{k: item[k] for k in keys} for item in request.data if item['onair'] == False]
             if data_keys:
@@ -71,5 +71,9 @@ class AstraMonitoringView(APIView):
             if not serializer.is_valid():
                 return Response(serializer.errors)
             serializer.save()
+        else:
+            url = f'https://api.telegram.org/{settings.TOKEN_TG}/sendMessage'
+            chat_id = settings.CHAT_ID_TG
+            requests.post(url, data={'chat_id': chat_id, 'text': 'Incorrect request'})
 
         return Response(status.HTTP_200_OK)

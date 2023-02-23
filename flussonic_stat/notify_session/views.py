@@ -31,7 +31,6 @@ class StatusSessionsView(APIView):
         for data in data_list:
             try:
                 if data['event'] == 'play_started':
-
                     data_to_save = {
                         'bytes_sent': data.get('bytes'),
                         'country': data.get('country'),
