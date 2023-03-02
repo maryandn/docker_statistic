@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 import json
 import requests
+import time
 
 from notify_session.models import StatusSessionModel
 from notify_session.serializers import SessionOpenedSerializer, SessionClosedSerializer, \
@@ -167,7 +168,8 @@ class StatForUserConnectionsView(APIView):
 
     def get(self, request, *args, **kwargs):
         token = kwargs.get('token')
-        qs = StatusSessionModel.objects.filter(token=token, deleted_at=1)
+        qs = StatusSessionModel.objects.filter(token=token, deleted_at=1,
+                                               created_at__lt=round(time.time()*1000) - 60000)
         all_count = qs.count()
         data = qs.values('ip').annotate(count=Count('ip'))
         return Response({'all_count': all_count, 'data': data}, status.HTTP_200_OK)
