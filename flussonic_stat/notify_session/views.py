@@ -1,4 +1,3 @@
-from django.db.models import Count
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from drf_multiple_model.views import ObjectMultipleModelAPIView
@@ -15,6 +14,25 @@ from notify_session.models import StatusSessionModel
 from notify_session.serializers import SessionOpenedSerializer, SessionClosedSerializer, \
     OpenedSessionsForBillingSerializer
 from utils.get_client_ip import get_client_ip
+
+
+def transform_data(data):
+    sessions_by_ip = {}
+
+    for session in data:
+        ip = session["ip"]
+        media = session["my_field"]
+        session_id = session["session_id"]
+        created_at = session['created_at']
+
+        if ip in sessions_by_ip:
+            sessions_by_ip[ip]["count"] += 1
+            sessions_by_ip[ip]["sessions"].append({"media": media, 'created_at': created_at, "session_id": session_id})
+        else:
+            sessions_by_ip[ip] = {"ip": ip, "count": 1,
+                                  "sessions": [{"media": media, 'created_at': created_at, "session_id": session_id}]}
+
+    return list(sessions_by_ip.values())
 
 
 @csrf_exempt
@@ -169,7 +187,10 @@ class StatForUserConnectionsView(APIView):
     def get(self, request, *args, **kwargs):
         token = kwargs.get('token')
         qs = StatusSessionModel.objects.filter(token=token, deleted_at=1,
-                                               created_at__lt=round(time.time()*1000) - 90000)
-        all_count = qs.count()
-        data = qs.values('ip').annotate(count=Count('ip'))
-        return Response({'all_count': all_count, 'data': data}, status.HTTP_200_OK)
+                                               created_at__lt=round(time.time() * 1000) - 60000).order_by('-created_at')
+
+        return Response(
+            {
+                'all_count': qs.count(),
+                'data': transform_data(SessionOpenedSerializer(qs, many=True).data)
+            }, status.HTTP_200_OK)
