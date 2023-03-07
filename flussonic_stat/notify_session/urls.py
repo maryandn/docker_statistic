@@ -13,5 +13,5 @@ urlpatterns = [
     path('forbilling/<str:pk>', OpenedSessionsForBillingView.as_view()),
     path('access/<str:token>', StatForUserConnectionsView.as_view()),
     path('access/ip/<str:token>', StatForUserConnectionsIpView.as_view()),
-    path('access/sesions/<str:token>', StatForUserConnectionsSessionView.as_view()),
+    path('access/sessions/<str:token>', StatForUserConnectionsSessionView.as_view()),
 ]
