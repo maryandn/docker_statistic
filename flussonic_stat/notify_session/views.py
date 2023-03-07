@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from drf_multiple_model.views import ObjectMultipleModelAPIView
@@ -187,10 +188,29 @@ class StatForUserConnectionsView(APIView):
     def get(self, request, *args, **kwargs):
         token = kwargs.get('token')
         qs = StatusSessionModel.objects.filter(token=token, deleted_at=1,
-                                               created_at__lt=round(time.time() * 1000) - 60000).order_by('-created_at')
+                                               created_at__lt=round(time.time() * 1000) - 45000).order_by('-created_at')
 
         return Response(
             {
                 'all_count': qs.count(),
                 'data': transform_data(SessionOpenedSerializer(qs, many=True).data)
             }, status.HTTP_200_OK)
+
+
+class StatForUserConnectionsIpView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        token = kwargs.get('token')
+        qs = StatusSessionModel.objects.filter(token=token, deleted_at=1,
+                                               created_at__lt=round(time.time() * 1000) - 45000).values('ip').distinct()
+        return Response(qs, status.HTTP_200_OK)
+
+
+class StatForUserConnectionsSessionView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        token = kwargs.get('token')
+        qs = StatusSessionModel.objects.filter(token=token, deleted_at=1,
+                                               created_at__lt=round(time.time() * 1000) - 45000).aggregate(
+            all_count=Count('id'))
+        return Response(qs, status.HTTP_200_OK)
