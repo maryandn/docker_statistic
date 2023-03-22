@@ -34,10 +34,9 @@ class ChannelListView(APIView):
 
         data = request.data[0]
         ip = get_client_ip(request)
-
         try:
             if data['event'] == 'config_reloaded':
-                res = request_flussonic(ip)
+                res = request_flussonic('50.7.89.234')
                 list_channels = res.get('streams')
                 list_of_dict = []
                 for item in list_channels:
@@ -52,16 +51,17 @@ class ChannelListView(APIView):
                 list_sources = [x.get('url') for x in SourceModel.objects.all().values('url')]
                 list_urls = []
                 list_text = ['Service messages from stat:']
-
                 for server in list_server:
                     res_all = request_flussonic(server.get('ip'))
                     for item in res_all.get('streams'):
-                        list_urls.append(str(list(item.get('urls').keys())[0]))
+                        if item.get('urls'):
+                            list_urls.append(str(list(item.get('urls').keys())[0]))
 
                 for item_count in list_sources:
                     count = sum(1 for s in list_urls if f'{item_count}' in s)
                     list_text.append(' ' + str(f"{item_count}: {count}"))
                 text = '\n'.join(list_text)
+
                 send_message_to_tg(text)
 
             else:
