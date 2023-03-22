@@ -1,10 +1,12 @@
 from django.db.models import Sum
+from django.conf import settings
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 
+from config.models import ServerModel
 from notify_session.models import StatusSessionModel
 from statistic.models import SessionModel
 from statistic.serializers import SessionSerializer
@@ -78,12 +80,14 @@ class GetStatView(APIView):
             base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
             date_for_del = base_unix_time - 172800000
 
-            list_ip = ['50.7.89.234', '162.19.136.10', '141.95.65.149', '145.239.140.7', '185.132.132.212']
+            list_server = ServerModel.objects.all().values('ip')
             dict_for_count = []
             dict_for_deleted = []
 
-            for ip in list_ip:
-                res = requests.get(f'http://admin:qwertystream@{ip}:89/flussonic/api/sessions').json()
+            for server in list_server:
+                ip = server.get('ip')
+                res = requests.get(
+                    f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/flussonic/api/sessions').json()
 
                 if res.get('sessions', False):
 

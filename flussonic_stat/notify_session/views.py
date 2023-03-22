@@ -1,5 +1,10 @@
+import json
+import requests
+import time
+
 from django.db.models import Count
 from django.http import HttpResponse
+from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from drf_multiple_model.views import ObjectMultipleModelAPIView
 from rest_framework import status
@@ -7,9 +12,6 @@ from rest_framework.generics import ListAPIView
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-import json
-import requests
-import time
 
 from notify_session.models import StatusSessionModel
 from notify_session.serializers import SessionOpenedSerializer, SessionClosedSerializer, \
@@ -108,7 +110,7 @@ class StatusSessionsView(APIView):
                 media = data.get('media')
                 session_id = data.get('session_id')
                 res = requests.get(
-                    f'http://admin:qwertystream@{ip}:89/flussonic/api/sessions?user_id={user_id}&name={media}')
+                    f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/flussonic/api/sessions?user_id={user_id}&name={media}')
                 obj = next(item for item in res.json()['sessions'] if item["session_id"] == session_id)
 
                 data_to_save = {
