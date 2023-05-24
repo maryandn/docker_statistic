@@ -36,7 +36,7 @@ class ChannelListView(APIView):
         ip = get_client_ip(request)
         try:
             if data['event'] == 'config_reloaded':
-                res = request_flussonic('50.7.89.234')
+                res = request_flussonic(ip)
                 list_channels = res.get('streams')
                 list_of_dict = []
                 for item in list_channels:
