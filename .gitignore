@@ -2,3 +2,4 @@ db_django/
 .env
 flussonic_stat/.env
 flussonic_stat/.idea
+**/__pycache__
