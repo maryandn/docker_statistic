@@ -30,7 +30,7 @@ FLUSSONIC_LOGIN = conf.get('FLUSSONIC_LOGIN')
 FLUSSONIC_PASSWORD = conf.get('FLUSSONIC_PASSWORD')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
