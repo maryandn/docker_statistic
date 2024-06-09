@@ -27,10 +27,14 @@ services:
       - db
     command: >
       sh -c "python3.8 manage.py runserver 0.0.0.0:8000"
+    networks:
+      - mysqlnetwork
 
   db:
     container_name: db03
     image: mysql:latest
+    ports:
+      - '3306:3306'
     command:
       - '--skip-log-bin'
     env_file:
