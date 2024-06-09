@@ -47,6 +47,20 @@ services:
     networks:
       - mysqlnetwork
 
+  mysql-admin:
+    restart: always
+    image: phpmyadmin/phpmyadmin
+    container_name: mariadb-phpmyadmin
+    ports:
+      - "8081:80"
+    networks:
+      - mysqlnetwork
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+
   redis-server:
     restart: always
     image: redis:4.0
