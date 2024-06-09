@@ -8,7 +8,7 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from drf_multiple_model.views import ObjectMultipleModelAPIView
 from rest_framework import status
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, DestroyAPIView
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -216,3 +216,11 @@ class StatForUserConnectionsSessionView(APIView):
                                                created_at__lt=round(time.time() * 1000) - 45000).aggregate(
             all_count=Count('id'))
         return Response(qs, status.HTTP_200_OK)
+
+
+class ClearAllSessionsView(DestroyAPIView):
+    queryset = StatusSessionModel.objects.all()
+
+    def delete(self, request, *args, **kwargs):
+        self.queryset.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

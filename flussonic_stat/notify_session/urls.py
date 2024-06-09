@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 from .views import StatusSessionsView, OpenedClosedSessionsView, OpenedSessionsForBillingView, \
     StatForUserConnectionsView, StatusPlayClosedView, StatusPlayStartedView, StatForUserConnectionsIpView, \
-    StatForUserConnectionsSessionView
+    StatForUserConnectionsSessionView, ClearAllSessionsView
 
 urlpatterns = [
     path('', StatusSessionsView.as_view()),
@@ -14,4 +14,5 @@ urlpatterns = [
     path('access/<str:token>', StatForUserConnectionsView.as_view()),
     path('access/ip/<str:token>', StatForUserConnectionsIpView.as_view()),
     path('access/sessions/<str:token>', StatForUserConnectionsSessionView.as_view()),
+    path('clear/all_sessions', ClearAllSessionsView.as_view()),
 ]
