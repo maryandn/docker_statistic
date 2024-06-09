@@ -38,5 +38,30 @@ services:
     restart: always
     volumes:
     - ./db_django:/var/lib/mysql
+    networks:
+      - mysqlnetwork
+
+  redis-server:
+    restart: always
+    image: redis:4.0
+    container_name: redis-server
+    command: /bin/bash -c 'redis-server --appendonly yes'
+    sysctls:
+      - net.core.somaxconn=65535
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis:/data
+    mem_limit: 512m
+    networks:
+      - mysqlnetwork
 volumes:
   static:
+  mysql:
+    driver: local
+  redis:
+    driver: local
+
+networks:
+  mysqlnetwork:
+    driver: bridge

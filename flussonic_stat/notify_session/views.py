@@ -220,7 +220,6 @@ class StatForUserConnectionsSessionView(APIView):
 
 
 class ClearAllSessionsView(DestroyAPIView):
-    permission_classes = [AllowAny]
     queryset = StatusSessionModel.objects.all()
 
     def delete(self, request, *args, **kwargs):
