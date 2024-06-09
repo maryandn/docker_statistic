@@ -8,6 +8,7 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from drf_multiple_model.views import ObjectMultipleModelAPIView
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from rest_framework.generics import ListAPIView, DestroyAPIView
 
 from rest_framework.views import APIView
@@ -219,6 +220,7 @@ class StatForUserConnectionsSessionView(APIView):
 
 
 class ClearAllSessionsView(DestroyAPIView):
+    permission_classes = [AllowAny]
     queryset = StatusSessionModel.objects.all()
 
     def delete(self, request, *args, **kwargs):
