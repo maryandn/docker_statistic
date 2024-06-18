@@ -14,6 +14,7 @@ from rest_framework.generics import ListAPIView, DestroyAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
+from config.models import ServerModel
 from notify_session.models import StatusSessionModel
 from notify_session.serializers import SessionOpenedSerializer, SessionClosedSerializer, \
     OpenedSessionsForBillingSerializer
@@ -41,7 +42,8 @@ def transform_data(data):
 
 @csrf_exempt
 def notify(request):
-    print(json.loads(request.body)[0])
+    ip = get_client_ip(request)
+    # print(json.loads(request.body))
     return HttpResponse('')
 
 
@@ -49,7 +51,14 @@ class StatusPlayStartedView(APIView):
     serializer_class = SessionOpenedSerializer
 
     def post(self, request):
+
+        ip = get_client_ip(request)
+        qs_server_ip_access = ServerModel.objects.filter(ip=ip)
+        if not qs_server_ip_access.exists():
+            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+
         data_list = request.data
+
         for data in data_list:
             if data['event'] == 'play_started':
                 data_to_save = {
@@ -79,7 +88,14 @@ class StatusPlayStartedView(APIView):
 class StatusPlayClosedView(APIView):
 
     def post(self, request):
+
+        ip = get_client_ip(request)
+        qs_server_ip_access = ServerModel.objects.filter(ip=ip)
+        if not qs_server_ip_access.exists():
+            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+
         data_list = request.data
+
         for data in data_list:
             if data['event'] == 'play_closed':
                 session_id = data['id']
@@ -103,8 +119,14 @@ class StatusSessionsView(APIView):
     serializer_class = SessionOpenedSerializer, SessionClosedSerializer
 
     def post(self, request):
-        data_list = request.data
+
         ip = get_client_ip(request)
+        qs_server_ip_access = ServerModel.objects.filter(ip=ip)
+        if not qs_server_ip_access.exists():
+            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+
+        data_list = request.data
+
         for data in data_list:
             if data['event'] == 'session_opened':
                 user_id = data.get('user_id')
