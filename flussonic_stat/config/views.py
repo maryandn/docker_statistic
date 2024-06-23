@@ -12,4 +12,4 @@ class ConfigView(APIView):
         print(data)
         ip = get_client_ip(request)
         print(ip)
-        return Response(status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)

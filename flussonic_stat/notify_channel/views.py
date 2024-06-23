@@ -34,6 +34,10 @@ class ChannelListView(APIView):
 
         data = request.data[0]
         ip = get_client_ip(request)
+        qs_server_ip_access = ServerModel.objects.filter(ip=ip)
+        if not qs_server_ip_access.exists():
+            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+
         try:
             if data['event'] == 'config_reloaded':
                 res = request_flussonic(ip)
@@ -66,6 +70,6 @@ class ChannelListView(APIView):
 
             else:
                 print('other_event')
-            return Response(status.HTTP_200_OK)
+            return Response(status=status.HTTP_200_OK)
         except:
-            return Response(status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_400_BAD_REQUEST)

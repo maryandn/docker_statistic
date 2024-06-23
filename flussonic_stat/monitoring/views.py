@@ -4,7 +4,9 @@ from datetime import datetime
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.http import HttpResponse
 
+from config.models import ServerModel
 from monitoring.models import ChannelAstraModel, OnAirStatusModel
 from monitoring.serializers import OnAirStatusSerializer
 from utils.get_client_ip import get_client_ip
@@ -28,8 +30,14 @@ class AstraMonitoringView(APIView):
         return Response(status.HTTP_200_OK)
 
     def post(self, request):
-        all_keys = set().union(*(d.keys() for d in request.data))
+
         ip = get_client_ip(request)
+        qs_server_ip_access = ServerModel.objects.filter(ip=ip)
+        if not qs_server_ip_access.exists():
+            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+
+        all_keys = set().union(*(d.keys() for d in request.data))
+
         if 'channel' in all_keys:
             response = requests.get(f'http://{ip}:320/playlist.m3u8')
             res = response.text.splitlines()
@@ -70,4 +78,4 @@ class AstraMonitoringView(APIView):
             text = f'{ip} Incorrect request'
             send_message_to_tg(text)
 
-        return Response(status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)

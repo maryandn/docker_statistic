@@ -1,4 +1,5 @@
 import json
+
 import requests
 import time
 
@@ -8,8 +9,7 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from drf_multiple_model.views import ObjectMultipleModelAPIView
 from rest_framework import status
-from rest_framework.permissions import AllowAny
-from rest_framework.generics import ListAPIView, DestroyAPIView
+from rest_framework.generics import ListAPIView
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -43,7 +43,7 @@ def transform_data(data):
 @csrf_exempt
 def notify(request):
     ip = get_client_ip(request)
-    # print(json.loads(request.body))
+    print(json.loads(request.body))
     return HttpResponse('')
 
 
@@ -80,9 +80,9 @@ class StatusPlayStartedView(APIView):
                 if not serializer.is_valid():
                     return Response(serializer.errors)
                 serializer.save()
-                return Response(status.HTTP_200_OK)
+                return Response(status=status.HTTP_200_OK)
             else:
-                return Response(status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class StatusPlayClosedView(APIView):
@@ -110,9 +110,9 @@ class StatusPlayClosedView(APIView):
                     list_for_clear = list(last_sessions.values_list('id', flat=True))[:-10]
                     del_session_for_user = StatusSessionModel.objects.filter(id__in=list_for_clear)
                     del_session_for_user.delete()
-                return Response(status.HTTP_200_OK)
+                return Response(status=status.HTTP_200_OK)
             else:
-                return Response(status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class StatusSessionsView(APIView):
@@ -169,8 +169,8 @@ class StatusSessionsView(APIView):
                     del_session_for_user = StatusSessionModel.objects.filter(id__in=list_for_clear)
                     del_session_for_user.delete()
             else:
-                return Response(status.HTTP_400_BAD_REQUEST)
-            return Response(status.HTTP_200_OK)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_200_OK)
 
 
 class OpenedClosedSessionsView(ObjectMultipleModelAPIView):
