@@ -93,7 +93,6 @@ class GetStatView(APIView):
 
                     for i in res.get('sessions'):
                         if i.get('duration') > 60000:
-
                             data_dict_sessions = {
                                 'source': f'{ip}',
                                 'ip': i.get('ip'),
@@ -102,25 +101,25 @@ class GetStatView(APIView):
                                 'user_id': i.get('user_id') if i.get('user_id') else '',
                                 'session_id': i.get('session_id')
                             }
-
                             dict_for_count.append(data_dict_sessions)
-                            dict_for_deleted.append(i['session_id'])
+
+                        dict_for_deleted.append(i['session_id'])
 
                 elif res.get('items', False):
 
                     for i in res.get('items'):
-                        if i.get('type') == 'play' and i.get('duration') > 60000:
+                        if i.get('type') == 'play':
+                            if i.get('duration') > 60000:
+                                data_dict_items = {
+                                    'source': f'{ip}',
+                                    'ip': i.get('ip'),
+                                    'token': i.get('token') if i.get('token') else '',
+                                    'name': i.get('name'),
+                                    'user_id': i.get('user_id') if i.get('user_id') else '',
+                                    'session_id': i.get('id')
+                                }
+                                dict_for_count.append(data_dict_items)
 
-                            data_dict_items = {
-                                'source': f'{ip}',
-                                'ip': i.get('ip'),
-                                'token': i.get('token') if i.get('token') else '',
-                                'name': i.get('name'),
-                                'user_id': i.get('user_id') if i.get('user_id') else '',
-                                'session_id': i.get('id')
-                            }
-
-                            dict_for_count.append(data_dict_items)
                             dict_for_deleted.append(i['id'])
 
             data = unique_and_count(dict_for_count)
