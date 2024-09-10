@@ -124,12 +124,11 @@ class GetStatView(APIView):
 
                             dict_for_deleted.append(i['id'])
 
-                send_message_to_tg(ip)
-
             data = unique_and_count(dict_for_count)
 
             serializer = SessionSerializer(data=data, many=True)
             if not serializer.is_valid():
+                send_message_to_tg('serializer error')
                 return Response(serializer.errors)
             serializer.save()
 
