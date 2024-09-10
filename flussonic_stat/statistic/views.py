@@ -15,6 +15,8 @@ import requests
 from itertools import groupby
 import datetime
 
+from utils.tg_send_message import send_message_to_tg
+
 
 def canonicalize_dict(x):
     return sorted(x.items(), key=lambda x: hash(x[0]))
@@ -122,6 +124,8 @@ class GetStatView(APIView):
 
                             dict_for_deleted.append(i['id'])
 
+                send_message_to_tg(ip)
+
             data = unique_and_count(dict_for_count)
 
             serializer = SessionSerializer(data=data, many=True)
@@ -138,7 +142,8 @@ class GetStatView(APIView):
             session = SessionModel.objects.filter(time__lt=date_for_del)
             session.delete()
 
-            return Response(serializer.data)
+            # return Response(serializer.data)
+            return Response(status=status.HTTP_200_OK)
 
         except TimeoutError:
             print('Timeout')

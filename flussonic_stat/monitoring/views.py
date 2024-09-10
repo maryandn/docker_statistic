@@ -27,11 +27,12 @@ class AstraMonitoringView(APIView):
             send_message_to_tg(text)
 
         OnAirStatusModel.objects.filter(timestamp__lt=timestamp_now - 86400).delete()
-        return Response(status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
     def post(self, request):
 
         ip = get_client_ip(request)
+
         qs_server_ip_access = ServerModel.objects.filter(ip=ip)
         if not qs_server_ip_access.exists():
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)

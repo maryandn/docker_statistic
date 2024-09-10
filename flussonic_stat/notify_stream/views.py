@@ -7,7 +7,6 @@ from django.http import HttpResponse
 class StatusStreamView(APIView):
 
     def get(self, request):
-        # print(request.data)
         if type(request.data) == list:
             for i in request.data:
                 print(i)
