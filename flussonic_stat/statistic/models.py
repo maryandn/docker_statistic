@@ -8,7 +8,7 @@ class SessionModel(models.Model):
         verbose_name_plural = 'Статистика'
 
     time = models.BigIntegerField()
-    name = models.CharField(max_length=16)
+    name = models.CharField(max_length=18)
     session_id = models.CharField(max_length=55)
     source = models.GenericIPAddressField()
     ip = models.GenericIPAddressField()
