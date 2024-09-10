@@ -128,7 +128,7 @@ class GetStatView(APIView):
 
             serializer = SessionSerializer(data=data, many=True)
             if not serializer.is_valid():
-                send_message_to_tg('serializer error')
+                send_message_to_tg(serializer.errors)
                 return Response(serializer.errors)
             serializer.save()
 
