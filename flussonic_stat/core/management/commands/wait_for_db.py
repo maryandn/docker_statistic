@@ -19,20 +19,20 @@ class Command(BaseCommand):
                 time.sleep(1)
         self.stdout.write('Database connected!!!')
 
-        # self.restore_database()
+        self.restore_database()
 
-    # def restore_database(self):
-    #     database_name = DB_NAME_PRODUCTIONS
-    #     backup_file = '/backup/backup.sql'
-    #     mysql_user = MYSQL_USER_PRODUCTIONS
-    #     mysql_password = MYSQL_PASSWORD_PRODUCTIONS
-    #
-    #     if not os.path.exists(backup_file):
-    #         self.stdout.write(f'Backup file not found: {backup_file}')
-    #         return
-    #
-    #     try:
-    #         os.system(f'mysql -h db02 -u {mysql_user} -p{mysql_password} {database_name} < {backup_file}')
-    #         self.stdout.write(f'Database restored successfully from {backup_file}')
-    #     except Exception as e:
-    #         self.stdout.write(f'Error occurred during database restore: {str(e)}')
+    def restore_database(self):
+        database_name = DB_NAME_PRODUCTIONS
+        backup_file = '/backup/backup.sql'
+        mysql_user = MYSQL_USER_PRODUCTIONS
+        mysql_password = MYSQL_PASSWORD_PRODUCTIONS
+
+        if not os.path.exists(backup_file):
+            self.stdout.write(f'Backup file not found: {backup_file}')
+            return
+
+        try:
+            os.system(f'mysql -h db02 -u {mysql_user} -p{mysql_password} {database_name} < {backup_file}')
+            self.stdout.write(f'Database restored successfully from {backup_file}')
+        except Exception as e:
+            self.stdout.write(f'Error occurred during database restore: {str(e)}')
