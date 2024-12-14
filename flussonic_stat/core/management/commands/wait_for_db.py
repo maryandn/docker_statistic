@@ -32,7 +32,7 @@ class Command(BaseCommand):
             return
 
         try:
-            os.system(f'mysql -h db02 -u {mysql_user} -p{mysql_password} {database_name} < {backup_file}')
+            os.system(f'mysql -h db03 -u {mysql_user} -p{mysql_password} {database_name} < {backup_file}')
             self.stdout.write(f'Database restored successfully from {backup_file}')
         except Exception as e:
             self.stdout.write(f'Error occurred during database restore: {str(e)}')
