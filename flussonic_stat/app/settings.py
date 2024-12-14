@@ -29,6 +29,10 @@ CHAT_ID_TG = conf.get('CHAT_ID_TG')
 FLUSSONIC_LOGIN = conf.get('FLUSSONIC_LOGIN')
 FLUSSONIC_PASSWORD = conf.get('FLUSSONIC_PASSWORD')
 
+DB_NAME_PRODUCTIONS = conf.get("DB_NAME_PRODUCTIONS")
+MYSQL_USER_PRODUCTIONS = conf.get("MYSQL_USER_PRODUCTIONS")
+MYSQL_PASSWORD_PRODUCTIONS = conf.get("MYSQL_PASSWORD_PRODUCTIONS")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
@@ -52,7 +56,8 @@ INSTALLED_APPS = [
     'notify_session',
     'notify_stream',
     'monitoring',
-    'config'
+    'config',
+    'core'
 ]
 
 MIDDLEWARE = [
@@ -104,9 +109,9 @@ def mode_db():
     else:
         get_dict_env_value = {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': conf.get('DB_NAME_PRODUCTIONS'),
-            'USER': conf.get('MYSQL_USER_PRODUCTIONS'),
-            'PASSWORD': conf.get('MYSQL_PASSWORD_PRODUCTIONS'),
+            'NAME': DB_NAME_PRODUCTIONS,
+            'USER': MYSQL_USER_PRODUCTIONS,
+            'PASSWORD': MYSQL_PASSWORD_PRODUCTIONS,
             'HOST': 'db',
         }
     return get_dict_env_value

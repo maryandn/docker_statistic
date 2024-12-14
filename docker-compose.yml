@@ -10,8 +10,6 @@ services:
       - ./flussonic_stat/static:/app/static
     depends_on:
       - app
-    networks:
-      - mysqlnetwork
 
   app:
     build:
@@ -22,6 +20,7 @@ services:
     volumes:
       - ./flussonic_stat:/app
       - ./flussonic_stat/static:/app/static
+      - ./db_backup:/backup
     env_file:
       - ./flussonic_stat/.env
     restart: unless-stopped
@@ -29,8 +28,6 @@ services:
       - db
     command: >
       sh -c "python3.8 manage.py runserver 0.0.0.0:8000"
-    networks:
-      - mysqlnetwork
 
   db:
     container_name: db03
@@ -43,9 +40,8 @@ services:
       - .env
     restart: always
     volumes:
-    - ./db_django:/var/lib/mysql
-    networks:
-      - mysqlnetwork
+      - ./db_django:/var/lib/mysql
+      - ./db_backup:/backup
 
   mysql-admin:
     restart: always
@@ -53,36 +49,11 @@ services:
     container_name: mariadb-phpmyadmin
     ports:
       - "8081:80"
-    networks:
-      - mysqlnetwork
     depends_on:
       - db
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
 
-  redis-server:
-    restart: always
-    image: redis:4.0
-    container_name: redis-server
-    command: /bin/bash -c 'redis-server --appendonly yes'
-    sysctls:
-      - net.core.somaxconn=65535
-    ports:
-      - "6379:6379"
-    volumes:
-      - ./redis:/data
-    mem_limit: 512m
-    networks:
-      - mysqlnetwork
 volumes:
   static:
-    driver: local
-  mysql:
-    driver: local
-  redis:
-    driver: local
-
-networks:
-  mysqlnetwork:
-    driver: bridge
