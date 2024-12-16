@@ -89,7 +89,6 @@ class GetStatView(APIView):
 
             for server in list_server:
                 ip = server.get('ip')
-                send_message_to_tg(ip)
                 url = server.get('url')
                 res = requests.get(
                     f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}').json()
@@ -101,6 +100,7 @@ class GetStatView(APIView):
                             send_message_to_tg(i.get('token'))
                             current_unix_time_ms = int(time.time() * 1000)
                             duration = current_unix_time_ms - i.get('opened_at')
+                            send_message_to_tg(duration)
                             if duration > 60000:
                                 data_dict_sessions = {
                                     'source': f'{ip}',
