@@ -100,6 +100,7 @@ class GetStatView(APIView):
 
                     for i in res.get('sessions'):
                         if i.get('type') == 'play':
+                            send_message_to_tg(i.get('token'))
                             current_unix_time_ms = int(time.time() * 1000)
                             duration = current_unix_time_ms - i.get('opened_at')
                             if duration > 60000:
