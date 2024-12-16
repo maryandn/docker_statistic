@@ -94,13 +94,12 @@ class GetStatView(APIView):
                     f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}').json()
 
                 if res.get('sessions', False):
-
+                    send_message_to_tg(len(res.get('sessions')))
                     for i in res.get('sessions'):
                         if i.get('type') == 'play':
                             send_message_to_tg(i.get('token'))
                             current_unix_time_ms = int(time.time() * 1000)
                             duration = current_unix_time_ms - i.get('opened_at')
-                            send_message_to_tg(duration)
                             if duration > 60000:
                                 data_dict_sessions = {
                                     'source': f'{ip}',
