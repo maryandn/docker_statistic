@@ -20,5 +20,5 @@ class ProviderAdmin(admin.ModelAdmin):
 
 @admin.register(ServerModel)
 class ProviderAdmin(admin.ModelAdmin):
-    list_display = ('dyndns', 'ip')
+    list_display = ('dyndns', 'url', 'ip')
     search_fields = ['dyndns']
