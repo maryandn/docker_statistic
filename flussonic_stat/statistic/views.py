@@ -84,9 +84,6 @@ class GetStatView(APIView):
             date_for_del = base_unix_time - 172800000
 
             list_server = ServerModel.objects.all().values('ip', 'url')
-            list_server = list(
-                filter(lambda x: x.get('url') in ['flussonic/api/sessions', 'flussonic/api/items'], list_server)
-            )
             dict_for_count = []
             dict_for_deleted = []
 
