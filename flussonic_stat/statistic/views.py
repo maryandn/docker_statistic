@@ -1,3 +1,5 @@
+import json
+
 from django.db.models import Sum
 from django.conf import settings
 from rest_framework.permissions import AllowAny
@@ -96,8 +98,8 @@ class GetStatView(APIView):
                 if res.get('sessions', False):
                     send_message_to_tg(len(res.get('sessions')))
                     for i in res.get('sessions'):
+                        send_message_to_tg(json.dump(i))
                         if i.get('type') == 'play':
-                            send_message_to_tg(i.get('token'))
                             current_unix_time_ms = int(time.time() * 1000)
                             duration = current_unix_time_ms - i.get('opened_at')
                             if duration > 60000:
