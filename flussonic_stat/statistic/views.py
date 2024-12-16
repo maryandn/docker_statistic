@@ -109,7 +109,7 @@ class GetStatView(APIView):
                                     'token': i.get('token') if i.get('token') else '',
                                     'name': i.get('name'),
                                     'user_id': i.get('user_id') if i.get('user_id') else '',
-                                    'session_id': i.get('session_id')
+                                    'session_id': i.get('id')
                                 }
                                 dict_for_count.append(data_dict_sessions)
 
