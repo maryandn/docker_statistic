@@ -113,7 +113,7 @@ class GetStatView(APIView):
                                 }
                                 dict_for_count.append(data_dict_sessions)
 
-                        dict_for_deleted.append(i['session_id'])
+                            dict_for_deleted.append(i['id'])
 
                 elif res.get('items', False):
 
