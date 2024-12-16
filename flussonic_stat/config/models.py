@@ -31,4 +31,5 @@ class ServerModel(models.Model):
         verbose_name_plural = 'Сервера'
 
     dyndns = models.CharField(unique=True, max_length=255)
+    url = models.CharField(unique=False, max_length=255, blank=True)
     ip = models.GenericIPAddressField()

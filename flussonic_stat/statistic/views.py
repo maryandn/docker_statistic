@@ -82,14 +82,15 @@ class GetStatView(APIView):
             base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
             date_for_del = base_unix_time - 172800000
 
-            list_server = ServerModel.objects.all().values('ip')
+            list_server = ServerModel.objects.all().values('ip', 'url')
             dict_for_count = []
             dict_for_deleted = []
 
             for server in list_server:
                 ip = server.get('ip')
+                url = server.get('url')
                 res = requests.get(
-                    f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/flussonic/api/sessions').json()
+                    f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}').json()
 
                 if res.get('sessions', False):
 
@@ -106,23 +107,6 @@ class GetStatView(APIView):
                             dict_for_count.append(data_dict_sessions)
 
                         dict_for_deleted.append(i['session_id'])
-
-                elif res.get('items', False):
-
-                    for i in res.get('items'):
-                        if i.get('type') == 'play':
-                            if i.get('duration') > 60000:
-                                data_dict_items = {
-                                    'source': f'{ip}',
-                                    'ip': i.get('ip'),
-                                    'token': i.get('token') if i.get('token') else '',
-                                    'name': i.get('name'),
-                                    'user_id': i.get('user_id') if i.get('user_id') else '',
-                                    'session_id': i.get('id')
-                                }
-                                dict_for_count.append(data_dict_items)
-
-                            dict_for_deleted.append(i['id'])
 
             data = unique_and_count(dict_for_count)
 
