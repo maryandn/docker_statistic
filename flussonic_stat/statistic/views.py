@@ -83,6 +83,9 @@ class GetStatView(APIView):
             date_for_del = base_unix_time - 172800000
 
             list_server = ServerModel.objects.all().values('ip', 'url')
+            list_server = list(
+                filter(lambda x: x.get('url') in ['flussonic/api/sessions', 'flussonic/api/items'], list_server)
+            )
             dict_for_count = []
             dict_for_deleted = []
 
@@ -107,6 +110,23 @@ class GetStatView(APIView):
                             dict_for_count.append(data_dict_sessions)
 
                         dict_for_deleted.append(i['session_id'])
+
+                elif res.get('items', False):
+
+                    for i in res.get('items'):
+                        if i.get('type') == 'play':
+                            if i.get('duration') > 60000:
+                                data_dict_items = {
+                                    'source': f'{ip}',
+                                    'ip': i.get('ip'),
+                                    'token': i.get('token') if i.get('token') else '',
+                                    'name': i.get('name'),
+                                    'user_id': i.get('user_id') if i.get('user_id') else '',
+                                    'session_id': i.get('id')
+                                }
+                                dict_for_count.append(data_dict_items)
+
+                            dict_for_deleted.append(i['id'])
 
             data = unique_and_count(dict_for_count)
 
