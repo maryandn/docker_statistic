@@ -92,6 +92,7 @@ class GetStatView(APIView):
 
             for server in list_server:
                 ip = server.get('ip')
+                send_message_to_tg(ip)
                 url = server.get('url')
                 res = requests.get(
                     f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}').json()
