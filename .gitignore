@@ -1,5 +1,7 @@
 db_django/
+db_backup/
 .env
+.sql
 flussonic_stat/.env
 flussonic_stat/.idea
 **/__pycache__
