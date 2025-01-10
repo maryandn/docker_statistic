@@ -37,7 +37,7 @@ class AstraMonitoringView(APIView):
         qs_server_ip_access = ServerModel.objects.filter(ip=ip)
         if not qs_server_ip_access.exists():
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
-        send_message_to_tg(json.dumps(request.data))
+        # send_message_to_tg(json.dumps(request.data))
         all_keys = set().union(*(d.keys() for d in request.data))
 
         if 'channel' in all_keys:
@@ -71,7 +71,7 @@ class AstraMonitoringView(APIView):
                 if qs.exists():
                     for data_key in data_keys:
                         data_key["channel_id"] = qs.values()[0]['id']
-
+            send_message_to_tg(json.dumps(data_keys))
             serializer = OnAirStatusSerializer(data=data_keys, many=True)
             if not serializer.is_valid():
                 return Response(serializer.errors)
