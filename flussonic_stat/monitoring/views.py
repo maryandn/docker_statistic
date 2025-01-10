@@ -16,6 +16,7 @@ from utils.tg_send_message import send_message_to_tg
 class AstraMonitoringView(APIView):
 
     def get(self, request):
+        send_message_to_tg('get_astra_monitoring_data')
         timestamp_now = int(datetime.utcnow().timestamp())
         qs_for_tg = OnAirStatusModel.objects.filter(timestamp__gt=timestamp_now - 61)
         if qs_for_tg.exists():
@@ -32,7 +33,6 @@ class AstraMonitoringView(APIView):
     def post(self, request):
 
         ip = get_client_ip(request)
-        send_message_to_tg(ip)
         qs_server_ip_access = ServerModel.objects.filter(ip=ip)
         if not qs_server_ip_access.exists():
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
@@ -40,10 +40,8 @@ class AstraMonitoringView(APIView):
         all_keys = set().union(*(d.keys() for d in request.data))
 
         if 'channel' in all_keys:
-            send_message_to_tg(all_keys)
             response = requests.get(f'http://{ip}:320/playlist.m3u8')
             res = response.text.splitlines()
-            send_message_to_tg(res)
             res.pop(0)
             res = ''.join(res)[1:].split('#')
             list_id_astra = []
@@ -64,7 +62,6 @@ class AstraMonitoringView(APIView):
         elif 'dvb_id' in all_keys:
             print('++dvb++', all_keys)
         elif 'onair' in all_keys:
-            send_message_to_tg('onair')
             keys = ['onair', 'timestamp', 'channel_id', 'count']
             data_keys = [{k: item[k] for k in keys} for item in request.data if item['onair'] == False]
             if data_keys:
