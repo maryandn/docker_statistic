@@ -73,4 +73,5 @@ class ChannelListView(APIView):
                 print('other_event')
             return Response(status=status.HTTP_200_OK)
         except:
+            send_message_to_tg('Error')
             return Response(status=status.HTTP_400_BAD_REQUEST)
