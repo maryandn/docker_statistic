@@ -37,7 +37,7 @@ class AstraMonitoringView(APIView):
         qs_server_ip_access = ServerModel.objects.filter(ip=ip)
         if not qs_server_ip_access.exists():
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
-        send_message_to_tg(json.load(request.data))
+        send_message_to_tg(json.dumps(request.data))
         all_keys = set().union(*(d.keys() for d in request.data))
 
         if 'channel' in all_keys:
