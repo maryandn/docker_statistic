@@ -15,9 +15,9 @@ from utils.get_client_ip import get_client_ip
 from utils.tg_send_message import send_message_to_tg
 
 
-def request_flussonic(ip):
+def request_flussonic(ip, url):
     res = requests.get(
-        f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/flussonic/api/streams').json()
+        f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}/streams').json()
     return res
 
 
@@ -36,12 +36,15 @@ class ChannelListView(APIView):
         ip = get_client_ip(request)
         send_message_to_tg(ip)
         qs_server_ip_access = ServerModel.objects.filter(ip=ip)
+
         if not qs_server_ip_access.exists():
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
+        url = qs_server_ip_access.values()[0]['url']
+
         try:
             if data['event'] == 'config_reloaded':
-                res = request_flussonic(ip)
+                res = request_flussonic(ip, url)
                 list_channels = res.get('streams')
                 list_of_dict = []
                 for item in list_channels:
@@ -52,12 +55,12 @@ class ChannelListView(APIView):
                     ChannelListModel.objects.update_or_create(name_channel=name_channel, defaults=channel)
 
                 # count sources
-                list_server = ServerModel.objects.all().values('ip')
+                list_server = ServerModel.objects.all().values('ip', 'url')
                 list_sources = [x.get('url') for x in SourceModel.objects.all().values('url')]
                 list_urls = []
                 list_text = ['Service messages from stat:']
                 for server in list_server:
-                    res_all = request_flussonic(server.get('ip'))
+                    res_all = request_flussonic(server.get('ip'), server.get('url'))
                     for item in res_all.get('streams'):
                         if item.get('urls'):
                             list_urls.append(str(list(item.get('urls').keys())[0]))

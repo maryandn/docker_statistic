@@ -93,7 +93,7 @@ class GetStatView(APIView):
                 ip = server.get('ip')
                 url = server.get('url')
                 res = requests.get(
-                    f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}').json()
+                    f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}/sessions').json()
 
                 if res.get('sessions', False):
                     for i in res.get('sessions'):

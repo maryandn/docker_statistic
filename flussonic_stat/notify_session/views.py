@@ -125,6 +125,7 @@ class StatusSessionsView(APIView):
         if not qs_server_ip_access.exists():
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
+        url = qs_server_ip_access.values()[0]['url']
         data_list = request.data
 
         for data in data_list:
@@ -133,7 +134,7 @@ class StatusSessionsView(APIView):
                 media = data.get('media')
                 session_id = data.get('session_id')
                 res = requests.get(
-                    f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/flussonic/api/sessions?user_id={user_id}&name={media}')
+                    f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}/sessions?user_id={user_id}&name={media}')
                 obj = next(item for item in res.json()['sessions'] if item["session_id"] == session_id)
 
                 data_to_save = {
