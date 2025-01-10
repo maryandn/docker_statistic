@@ -16,7 +16,6 @@ from utils.tg_send_message import send_message_to_tg
 class AstraMonitoringView(APIView):
 
     def get(self, request):
-        send_message_to_tg('get_astra_monitoring_data')
         timestamp_now = int(datetime.utcnow().timestamp())
         qs_for_tg = OnAirStatusModel.objects.filter(timestamp__gt=timestamp_now - 61)
         if qs_for_tg.exists():
@@ -71,6 +70,7 @@ class AstraMonitoringView(APIView):
                     for data_key in data_keys:
                         data_key["channel_id"] = qs.values()[0]['id']
 
+            send_message_to_tg(data_keys)
             serializer = OnAirStatusSerializer(data=data_keys, many=True)
             if not serializer.is_valid():
                 return Response(serializer.errors)
