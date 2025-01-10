@@ -71,7 +71,7 @@ class AstraMonitoringView(APIView):
                 if qs.exists():
                     for data_key in data_keys:
                         data_key["channel_id"] = qs.values()[0]['id']
-            send_message_to_tg(json.dumps(data_keys))
+            # send_message_to_tg(json.dumps(data_keys))
             serializer = OnAirStatusSerializer(data=data_keys, many=True)
             if not serializer.is_valid():
                 return Response(serializer.errors)
