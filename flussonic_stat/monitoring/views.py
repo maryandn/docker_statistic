@@ -32,7 +32,7 @@ class AstraMonitoringView(APIView):
     def post(self, request):
 
         ip = get_client_ip(request)
-
+        send_message_to_tg(ip)
         qs_server_ip_access = ServerModel.objects.filter(ip=ip)
         if not qs_server_ip_access.exists():
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
@@ -64,6 +64,7 @@ class AstraMonitoringView(APIView):
         elif 'dvb_id' in all_keys:
             print('++dvb++', all_keys)
         elif 'onair' in all_keys:
+            send_message_to_tg('onair')
             keys = ['onair', 'timestamp', 'channel_id', 'count']
             data_keys = [{k: item[k] for k in keys} for item in request.data if item['onair'] == False]
             if data_keys:
