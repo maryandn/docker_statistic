@@ -36,7 +36,32 @@ MYSQL_PASSWORD_PRODUCTIONS = conf.get("MYSQL_PASSWORD_PRODUCTIONS")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+def mode_db():
+    if DEBUG:
+        get_dict_env_value = {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': conf.get('DB_NAME_LOCAL'),
+            'USER': conf.get('MYSQL_USER_LOCAL'),
+            'PASSWORD': conf.get('MYSQL_PASSWORD_LOCAL'),
+            'HOST': 'localhost',
+        }
+        get_settings_memcached = '127.0.0.1:11211'
+        get_allowed_hosts = ['localhost']
+    else:
+        get_dict_env_value = {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': DB_NAME_PRODUCTIONS,
+            'USER': MYSQL_USER_PRODUCTIONS,
+            'PASSWORD': MYSQL_PASSWORD_PRODUCTIONS,
+            'HOST': 'db',
+        }
+        get_settings_memcached = '172.17.0.1:11211'
+        get_allowed_hosts = ['stat.srv4you.net']
+    return get_dict_env_value, get_settings_memcached, get_allowed_hosts
+
+dict_env_value, settings_memcached, allowed_hosts = mode_db()
+
+ALLOWED_HOSTS = allowed_hosts
 
 # Application definition
 
@@ -96,29 +121,6 @@ WSGI_APPLICATION = 'app.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
-def mode_db():
-    if DEBUG:
-        get_dict_env_value = {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': conf.get('DB_NAME_LOCAL'),
-            'USER': conf.get('MYSQL_USER_LOCAL'),
-            'PASSWORD': conf.get('MYSQL_PASSWORD_LOCAL'),
-            'HOST': 'localhost',
-        }
-        get_settings_memcached = '127.0.0.1:11211'
-    else:
-        get_dict_env_value = {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': DB_NAME_PRODUCTIONS,
-            'USER': MYSQL_USER_PRODUCTIONS,
-            'PASSWORD': MYSQL_PASSWORD_PRODUCTIONS,
-            'HOST': 'db',
-        }
-        get_settings_memcached = '172.17.0.1:11211'
-    return get_dict_env_value, get_settings_memcached
-
-dict_env_value, settings_memcached = mode_db()
 
 DATABASES = {
     'default': dict_env_value

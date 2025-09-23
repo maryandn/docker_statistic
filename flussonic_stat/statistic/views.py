@@ -143,7 +143,7 @@ class GetStatView(APIView):
                                 }
                                 dict_for_count.append(data_dict_sessions)
 
-                            dict_for_deleted.append(i.get("id"))
+                            dict_for_deleted.append(i.get('id'))
 
                 elif res.get('items', False):
 
@@ -160,7 +160,7 @@ class GetStatView(APIView):
                                 }
                                 dict_for_count.append(data_dict_items)
 
-                            dict_for_deleted.append(i.get("id"))
+                            dict_for_deleted.append(i.get('id'))
             except (requests.ConnectionError, requests.Timeout, requests.RequestException):
                 continue
 
@@ -182,10 +182,19 @@ class GetStatView(APIView):
             cleaned.update(time_dict)
             cache.set(token, cleaned)
 
+        # serializer = SessionSerializer(data=data, many=True)
+        # if not serializer.is_valid():
+        #     send_message_to_tg(serializer.errors)
+        #     return Response(serializer.errors)
+        # serializer.save()
+
         no_deleted = list(StatusSessionModel.objects.filter(deleted_at=1).values_list('session_id', flat=True))
 
         res_for_deleted_at = list(set(no_deleted) - set(dict_for_deleted))
 
         StatusSessionModel.objects.filter(session_id__in=res_for_deleted_at).update(deleted_at=base_unix_time)
+
+        # session = SessionModel.objects.filter(time__lt=date_for_del)
+        # session.delete()
 
         return Response(status=status.HTTP_200_OK)
