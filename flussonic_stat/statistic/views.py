@@ -1,7 +1,9 @@
-import json
+from collections import defaultdict
 
 from django.db.models import Sum
 from django.conf import settings
+from django.core.cache import cache
+
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework import status, generics
@@ -30,7 +32,7 @@ def unique_and_count(lst):
     return [dict(k + [("count", len(list(g)))]) for k, g in grouper]
 
 
-class TokenStatView(generics.ListAPIView):
+class TokenMysqlStatView(generics.ListAPIView):
     renderer_classes = [JSONRenderer]
     serializer_class = SessionSerializer
     permission_classes = [AllowAny]
@@ -76,25 +78,55 @@ class TokenStatView(generics.ListAPIView):
         return Response(result, status.HTTP_200_OK)
 
 
+class TokenCacheStatView(APIView):
+    renderer_classes = [JSONRenderer]
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        now = int(time.time())
+        base_unix_time = now // 60 * 60 * 1000
+
+        date_list = [base_unix_time - x * 60000 for x in range(24 * 60)]
+
+        token_or_ip = kwargs.get("pk")
+        data = cache.get(token_or_ip, {})
+
+        result = []
+        for ts in date_list:
+            items = data.get(ts, [])
+            if not items:
+                result.append((ts, 0))
+            else:
+                total_count = sum(i.get("count", 0) for i in items)
+                result.append((ts, total_count))
+
+        result.sort(key=lambda tup: tup[0])
+
+        return Response(result, status=status.HTTP_200_OK)
+
+
 class GetStatView(APIView):
     serializer_class = SessionSerializer
     permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):
-        try:
-            base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
-            date_for_del = base_unix_time - 172800000
+        base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
+        date_for_del = base_unix_time - 172800000
 
-            list_server = ServerModel.objects.all().values('ip', 'url')
-            dict_for_count = []
-            dict_for_deleted = []
+        list_server = ServerModel.objects.all().values('ip', 'url')
 
-            for server in list_server:
+        dict_for_count = []
+        dict_for_deleted = []
+
+        for server in list_server:
+            try:
                 ip = server.get('ip')
                 url = server.get('url')
                 res = requests.get(
-                    f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}/sessions').json()
-
+                    f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}/sessions',
+                    timeout=5)
+                res.raise_for_status()
+                res = res.json()
                 if res.get('sessions', False):
                     for i in res.get('sessions'):
                         if i.get('type') == 'play':
@@ -111,7 +143,7 @@ class GetStatView(APIView):
                                 }
                                 dict_for_count.append(data_dict_sessions)
 
-                            dict_for_deleted.append(i['id'])
+                            dict_for_deleted.append(i.get("id"))
 
                 elif res.get('items', False):
 
@@ -128,27 +160,32 @@ class GetStatView(APIView):
                                 }
                                 dict_for_count.append(data_dict_items)
 
-                            dict_for_deleted.append(i['id'])
+                            dict_for_deleted.append(i.get("id"))
+            except (requests.ConnectionError, requests.Timeout, requests.RequestException):
+                continue
 
-            data = unique_and_count(dict_for_count)
+        data = unique_and_count(dict_for_count)
 
-            serializer = SessionSerializer(data=data, many=True)
-            if not serializer.is_valid():
-                send_message_to_tg(serializer.errors)
-                return Response(serializer.errors)
-            serializer.save()
+        grouped = defaultdict(lambda: defaultdict(list))
+        for item in data:
+            token = item.get("token")
+            if not token:
+                continue
+            grouped[token][base_unix_time].append(item)
+        for token, time_dict in grouped.items():
+            existing = cache.get(token, {})
+            cleaned = {
+                ts: items
+                for ts, items in existing.items()
+                if base_unix_time - int(ts) <= 172800000
+            }
+            cleaned.update(time_dict)
+            cache.set(token, cleaned)
 
-            no_deleted = list(StatusSessionModel.objects.filter(deleted_at=1).values_list('session_id', flat=True))
+        no_deleted = list(StatusSessionModel.objects.filter(deleted_at=1).values_list('session_id', flat=True))
 
-            res_for_deleted_at = list(set(no_deleted) - set(dict_for_deleted))
+        res_for_deleted_at = list(set(no_deleted) - set(dict_for_deleted))
 
-            StatusSessionModel.objects.filter(session_id__in=res_for_deleted_at).update(deleted_at=base_unix_time)
+        StatusSessionModel.objects.filter(session_id__in=res_for_deleted_at).update(deleted_at=base_unix_time)
 
-            session = SessionModel.objects.filter(time__lt=date_for_del)
-            session.delete()
-
-            # return Response(serializer.data)
-            return Response(status=status.HTTP_200_OK)
-
-        except TimeoutError:
-            print('Timeout')
+        return Response(status=status.HTTP_200_OK)

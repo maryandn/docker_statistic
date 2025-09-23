@@ -106,6 +106,7 @@ def mode_db():
             'PASSWORD': conf.get('MYSQL_PASSWORD_LOCAL'),
             'HOST': 'localhost',
         }
+        get_settings_memcached = '127.0.0.1:11211'
     else:
         get_dict_env_value = {
             'ENGINE': 'django.db.backends.mysql',
@@ -114,10 +115,13 @@ def mode_db():
             'PASSWORD': MYSQL_PASSWORD_PRODUCTIONS,
             'HOST': 'db',
         }
-    return get_dict_env_value
+        get_settings_memcached = '172.17.0.1:11211'
+    return get_dict_env_value, get_settings_memcached
+
+dict_env_value, settings_memcached = mode_db()
 
 DATABASES = {
-    'default': mode_db()
+    'default': dict_env_value
 }
 
 # Password validation
@@ -172,3 +176,11 @@ REST_FRAMEWORK = {
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+        'LOCATION': settings_memcached,
+        'TIMEOUT': 172800,
+    }
+}
