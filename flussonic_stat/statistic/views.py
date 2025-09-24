@@ -119,7 +119,7 @@ class GetStatView(APIView):
 
         dict_for_count = []
         dict_for_deleted = []
-
+        send_message_to_tg('Start request')
         for server in list_server:
             try:
                 ip = server.get('ip')
