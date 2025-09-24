@@ -129,6 +129,7 @@ class GetStatView(APIView):
                     timeout=5)
                 res.raise_for_status()
                 res = res.json()
+                send_message_to_tg(str(ip))
                 if res.get('sessions', False):
                     for i in res.get('sessions'):
                         if i.get('type') == 'play':
@@ -182,13 +183,16 @@ class GetStatView(APIView):
                 if base_unix_time - int(ts) <= 172800000
             }
             cleaned.update(time_dict)
-            if token == 'xdlh68u2tciqk8':  # ← тут у тебе не вистачає двокрапки
-                send_message_to_tg(str({
-                    "base_unix_time": base_unix_time,
-                    "incoming_time_dict": time_dict,
-                    "existing_keys": list(existing.keys()),
-                    "cleaned_keys": list(cleaned.keys())
-                }))
+
+            if token == 'xdlh68u2tciqk8':
+                send_message_to_tg('xdlh68u2tciqk8')
+                # send_message_to_tg(str({
+                #     "base_unix_time": base_unix_time,
+                #     "incoming_time_dict": time_dict,
+                #     "existing_keys": list(existing.keys()),
+                #     "cleaned_keys": list(cleaned.keys())
+                # }))
+
             cache.set(token, cleaned)
 
         # serializer = SessionSerializer(data=data, many=True)
