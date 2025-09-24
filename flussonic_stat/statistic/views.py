@@ -174,11 +174,12 @@ class GetStatView(APIView):
             if not token:
                 continue
             if token == 'xdlh68u2tciqk8':
-                send_message_to_tg('-------- Token in after if -----------')
+                send_message_to_tg(f'-------- Token in after if --- {base_unix_time} ---')
                 send_message_to_tg(str(item))
             grouped[token][base_unix_time].append(item)
             if token == 'xdlh68u2tciqk8':
                 send_message_to_tg(f"Token={token}, base_unix_time={base_unix_time}, grouped_now={list(grouped[token].keys())}")
+
         for token, time_dict in grouped.items():
             if token == 'xdlh68u2tciqk8':
                 send_message_to_tg(f"IN GROUPED: token={token}, keys={list(time_dict.keys())}")
