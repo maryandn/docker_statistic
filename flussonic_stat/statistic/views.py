@@ -110,7 +110,9 @@ class GetStatView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):
-        base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
+
+        now_ms = int(time.time() * 1000)
+        base_unix_time = (now_ms // 60000) * 60000
         date_for_del = base_unix_time - 172800000
 
         list_server = ServerModel.objects.all().values('ip', 'url')
