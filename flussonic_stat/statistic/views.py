@@ -89,11 +89,11 @@ class TokenCacheStatView(APIView):
         date_list = [base_unix_time - x * 60000 for x in range(24 * 60)]
 
         token_or_ip = kwargs.get("pk")
-        data = cache.get(token_or_ip, {})
 
         result = []
         for ts in date_list:
-            items = data.get(ts, [])
+            key = f"{token_or_ip}:{ts}"
+            items = cache.get(key, [])
             if not items:
                 result.append((ts, 0))
             else:
@@ -170,8 +170,9 @@ class GetStatView(APIView):
             token = item.get("token")
             if not token:
                 continue
-
-            existing = cache.get(token, {})
+            key = f"{token}:{base_unix_time}"
+            existing = cache.get(token, [])
+            existing.append(item)
 
             # cleaned = {
             #     ts: items
@@ -179,9 +180,7 @@ class GetStatView(APIView):
             #     if base_unix_time - int(ts) <= 172800000
             # }
 
-            existing.setdefault(base_unix_time, []).append(item)
-
-            cache.set(token, existing)
+            cache.set(key, existing)
 
         # serializer = SessionSerializer(data=data, many=True)
         # if not serializer.is_valid():
