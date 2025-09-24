@@ -168,41 +168,20 @@ class GetStatView(APIView):
 
         data = unique_and_count(dict_for_count)
 
-        grouped = defaultdict(lambda: defaultdict(list))
         for item in data:
             token = item.get("token")
             if not token:
                 continue
-            if token == 'xdlh68u2tciqk8':
-                send_message_to_tg(f'-------- Token in after if --- {base_unix_time} ---')
-                send_message_to_tg(str(item))
-            grouped[token][base_unix_time].append(item)
-            if token == 'xdlh68u2tciqk8':
-                send_message_to_tg(f"Token={token}, base_unix_time={base_unix_time}, grouped_now={list(grouped[token].keys())}")
 
-        for key, value in grouped.items():
-            if key == 'xdlh68u2tciqk8':
-                print(f"Token={key}, grouped_now={str(value)}")
-                send_message_to_tg(f"Token={key}, grouped_now={str(value)}")
-        for token, time_dict in grouped.items():
-            if token == 'xdlh68u2tciqk8':
-                print(time_dict)
-                send_message_to_tg(f"IN GROUPED: token={token}, keys={list(time_dict.keys())}")
-                send_message_to_tg('=========== Token in grouped ===========')
             existing = cache.get(token, {})
+
             cleaned = {
                 ts: items
                 for ts, items in existing.items()
                 if base_unix_time - int(ts) <= 172800000
             }
-            cleaned.update(time_dict)
 
-            if token == 'xdlh68u2tciqk8':
-                send_message_to_tg('=========== Token in cleaned ===========')
-                send_message_to_tg(str({
-                    "base_unix_time": base_unix_time,
-                    "incoming_time_dict": time_dict
-                }))
+            cleaned.setdefault(base_unix_time, []).append(item)
 
             cache.set(token, cleaned)
 
