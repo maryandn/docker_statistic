@@ -111,10 +111,8 @@ class GetStatView(APIView):
 
     def get(self, request, *args, **kwargs):
 
-        now_ms = int(time.time() * 1000)
-        base_unix_time = (now_ms // 60000) * 60000
+        base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
         date_for_del = base_unix_time - 172800000
-
         list_server = ServerModel.objects.all().values('ip', 'url')
 
         dict_for_count = []
@@ -168,22 +166,22 @@ class GetStatView(APIView):
 
         data = unique_and_count(dict_for_count)
 
-        for item in data:
-            token = item.get("token")
-            if not token:
-                continue
-
-            existing = cache.get(token, {})
-
-            cleaned = {
-                ts: items
-                for ts, items in existing.items()
-                if base_unix_time - int(ts) <= 172800000
-            }
-
-            cleaned.setdefault(base_unix_time, []).append(item)
-
-            cache.set(token, cleaned)
+        # for item in data:
+        #     token = item.get("token")
+        #     if not token:
+        #         continue
+        #
+        #     existing = cache.get(token, {})
+        #
+        #     cleaned = {
+        #         ts: items
+        #         for ts, items in existing.items()
+        #         if base_unix_time - int(ts) <= 172800000
+        #     }
+        #
+        #     cleaned.setdefault(base_unix_time, []).append(item)
+        #
+        #     cache.set(token, cleaned)
 
         # serializer = SessionSerializer(data=data, many=True)
         # if not serializer.is_valid():
