@@ -171,7 +171,7 @@ class GetStatView(APIView):
             if not token:
                 continue
             key = f"{token}:{base_unix_time}"
-            existing = cache.get(token, [])
+            existing = cache.get(key, [])
             existing.append(item)
 
             # cleaned = {
