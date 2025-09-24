@@ -119,7 +119,7 @@ class GetStatView(APIView):
 
         dict_for_count = []
         dict_for_deleted = []
-        send_message_to_tg('Start request')
+
         for server in list_server:
             try:
                 ip = server.get('ip')
@@ -129,7 +129,6 @@ class GetStatView(APIView):
                     timeout=5)
                 res.raise_for_status()
                 res = res.json()
-                send_message_to_tg(str(ip))
                 if res.get('sessions', False):
                     for i in res.get('sessions'):
                         if i.get('type') == 'play':
