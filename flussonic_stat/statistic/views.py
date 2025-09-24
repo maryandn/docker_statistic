@@ -176,6 +176,8 @@ class GetStatView(APIView):
                 send_message_to_tg('-------- Token in data -----------')
             if not token:
                 continue
+            if token == 'xdlh68u2tciqk8':
+                send_message_to_tg('-------- Token in after if -----------')
             grouped[token][base_unix_time].append(item)
         for token, time_dict in grouped.items():
             if token == 'xdlh68u2tciqk8':
