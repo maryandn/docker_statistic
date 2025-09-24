@@ -173,15 +173,15 @@ class GetStatView(APIView):
 
             existing = cache.get(token, {})
 
-            cleaned = {
-                ts: items
-                for ts, items in existing.items()
-                if base_unix_time - int(ts) <= 172800000
-            }
+            # cleaned = {
+            #     ts: items
+            #     for ts, items in existing.items()
+            #     if base_unix_time - int(ts) <= 172800000
+            # }
 
-            cleaned.setdefault(base_unix_time, []).append(item)
+            existing.setdefault(base_unix_time, []).append(item)
 
-            cache.set(token, cleaned)
+            cache.set(token, existing)
 
         # serializer = SessionSerializer(data=data, many=True)
         # if not serializer.is_valid():
