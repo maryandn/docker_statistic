@@ -115,9 +115,6 @@ class GetStatView(APIView):
 
         list_server = ServerModel.objects.all().values('ip', 'url')
 
-        cache.set(base_unix_time, 'worked')
-        send_message_to_tg(cache.get(base_unix_time))
-
         dict_for_count = []
         dict_for_deleted = []
 
