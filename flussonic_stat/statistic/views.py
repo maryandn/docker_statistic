@@ -189,6 +189,7 @@ class GetStatView(APIView):
             cleaned.update(time_dict)
 
             if token == 'xdlh68u2tciqk8':
+                send_message_to_tg('=========== Token in cleaned ===========')
                 send_message_to_tg(str({
                     "base_unix_time": base_unix_time,
                     "incoming_time_dict": time_dict,
