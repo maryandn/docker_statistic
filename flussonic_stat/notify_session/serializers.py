@@ -37,6 +37,18 @@ class SessionOpenedSerializer(serializers.ModelSerializer):
             value = value.split('?utc=')[0]
         return value
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        ip = data.get("ip")
+        if ip and ip.count(".") == 3:
+            parts = ip.split(".")
+            if len(parts) == 4:
+                parts[1] = "xxx"
+                parts[2] = "xxx"
+                data["ip"] = ".".join(parts)
+
+        return data
 
 class SessionClosedSerializer(serializers.ModelSerializer):
     class Meta:

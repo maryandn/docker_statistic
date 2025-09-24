@@ -180,7 +180,7 @@ class GetStatView(APIView):
             #     if base_unix_time - int(ts) <= 172800000
             # }
 
-            cache.set(key, existing)
+            cache.set(key, existing, timeout=172800)
 
         # serializer = SessionSerializer(data=data, many=True)
         # if not serializer.is_valid():
