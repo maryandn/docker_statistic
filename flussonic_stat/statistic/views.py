@@ -172,10 +172,14 @@ class GetStatView(APIView):
         grouped = defaultdict(lambda: defaultdict(list))
         for item in data:
             token = item.get("token")
+            if token == 'xdlh68u2tciqk8':
+                send_message_to_tg('-------- Token in data -----------')
             if not token:
                 continue
             grouped[token][base_unix_time].append(item)
         for token, time_dict in grouped.items():
+            if token == 'xdlh68u2tciqk8':
+                send_message_to_tg('=========== Token in grouped ===========')
             existing = cache.get(token, {})
             cleaned = {
                 ts: items
@@ -185,13 +189,12 @@ class GetStatView(APIView):
             cleaned.update(time_dict)
 
             if token == 'xdlh68u2tciqk8':
-                send_message_to_tg('xdlh68u2tciqk8')
-                # send_message_to_tg(str({
-                #     "base_unix_time": base_unix_time,
-                #     "incoming_time_dict": time_dict,
-                #     "existing_keys": list(existing.keys()),
-                #     "cleaned_keys": list(cleaned.keys())
-                # }))
+                send_message_to_tg(str({
+                    "base_unix_time": base_unix_time,
+                    "incoming_time_dict": time_dict,
+                    "existing_keys": list(existing.keys()),
+                    "cleaned_keys": list(cleaned.keys())
+                }))
 
             cache.set(token, cleaned)
 
