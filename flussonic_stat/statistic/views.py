@@ -171,13 +171,14 @@ class GetStatView(APIView):
         grouped = defaultdict(lambda: defaultdict(list))
         for item in data:
             token = item.get("token")
-            if token == 'xdlh68u2tciqk8':
-                send_message_to_tg('-------- Token in data -----------')
             if not token:
                 continue
             if token == 'xdlh68u2tciqk8':
                 send_message_to_tg('-------- Token in after if -----------')
+                send_message_to_tg(str(item))
             grouped[token][base_unix_time].append(item)
+            if token == 'xdlh68u2tciqk8':
+                send_message_to_tg(str(grouped[token]))
         for token, time_dict in grouped.items():
             if token == 'xdlh68u2tciqk8':
                 send_message_to_tg('=========== Token in grouped ===========')
