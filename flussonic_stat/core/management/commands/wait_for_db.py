@@ -36,7 +36,7 @@ class Command(BaseCommand):
             # os.system(f'mysql -h db03 -u {mysql_user} -p{mysql_password} {database_name} < {backup_file}')
             command = [
                 'mysql', '-h', 'db03', '-u', mysql_user,
-                f'--password={mysql_password}', database_name
+                f'--password={mysql_password}'
             ]
 
             with open(backup_file, 'r') as file:
