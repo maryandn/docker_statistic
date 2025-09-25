@@ -1,5 +1,6 @@
 from django.core.management import BaseCommand
 from django.db import connection, OperationalError
+import subprocess
 import time
 import os
 
@@ -32,7 +33,15 @@ class Command(BaseCommand):
             return
 
         try:
-            os.system(f'mysql -h db03 -u {mysql_user} -p{mysql_password} {database_name} < {backup_file}')
+            # os.system(f'mysql -h db03 -u {mysql_user} -p{mysql_password} {database_name} < {backup_file}')
+            command = [
+                'mysql', '-h', 'db03', '-u', mysql_user,
+                f'--password={mysql_password}', database_name
+            ]
+
+            with open(backup_file, 'r') as file:
+                subprocess.run(command, stdin=file, check=True)
+
             self.stdout.write(f'Database restored successfully from {backup_file}')
         except Exception as e:
             self.stdout.write(f'Error occurred during database restore: {str(e)}')
