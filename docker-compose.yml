@@ -35,14 +35,15 @@ services:
     ports:
       - '3306:3306'
     command:
-      - '--skip-log-bin'
+      - '--server-id=1'
+      - '--log-bin=mysql-bin'
+      - '--binlog-do-db=flussonic'
     env_file:
       - .env
     restart: always
-    tmpfs:
-      - /var/lib/mysql
     volumes:
       - ./db_backup:/backup
+      - ./db_mysql:/var/lib/mysql
 
   mysql-admin:
     restart: always
