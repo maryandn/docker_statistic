@@ -4,7 +4,8 @@ import subprocess
 import time
 import os
 
-from app.settings import DB_NAME_PRODUCTIONS, MYSQL_USER_PRODUCTIONS, MYSQL_PASSWORD_PRODUCTIONS
+from app.settings import DB_NAME_PRODUCTIONS, MYSQL_USER_PRODUCTIONS, MYSQL_PASSWORD_PRODUCTIONS, \
+    MYSQL_ROOT_PASSWORD_PRODUCTIONS
 
 
 class Command(BaseCommand):
@@ -27,6 +28,7 @@ class Command(BaseCommand):
         backup_file = '/backup/backup.sql'
         mysql_user = MYSQL_USER_PRODUCTIONS
         mysql_password = MYSQL_PASSWORD_PRODUCTIONS
+        mysql_root_password = MYSQL_ROOT_PASSWORD_PRODUCTIONS
 
         if not os.path.exists(backup_file):
             self.stdout.write(f'Backup file not found: {backup_file}')
@@ -35,8 +37,8 @@ class Command(BaseCommand):
         try:
 
             command = [
-                'mysql', '-h', 'db03', '-u', mysql_user,
-                f'--password={mysql_password}'
+                'mysql', '-h', 'db03', '-u', 'root',
+                f'--password={mysql_root_password}'
             ]
 
             with open(backup_file, 'r') as file:
