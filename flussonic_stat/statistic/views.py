@@ -116,7 +116,7 @@ class GetStatView(APIView):
 
         dict_for_count = []
         dict_for_deleted = []
-        dict_all_sessions = []
+        # dict_all_sessions = []
 
         for server in list_server:
             ip = server.get('ip')
@@ -188,6 +188,33 @@ class GetStatView(APIView):
         #     send_message_to_tg(serializer.errors)
         #     return Response(serializer.errors)
         # serializer.save()
+
+        # incoming_ids = [item['id'] for item in dict_for_count]
+        # existing_ids = set(
+        #     StatusSessionModel.objects.filter(deleted_at=1, session_id__in=incoming_ids)
+        #     .values_list('session_id', flat=True))
+        #
+        # new_objects = []
+        #
+        # for item in dict_for_count:
+        #     if item['id'] not in existing_ids:
+        #         new_objects.append(StatusSessionModel(
+        #             bytes_sent=item.get('bytes'),
+        #             country=item.get('country'),
+        #             created_at=item.get('opened_at'),
+        #             deleted_at=1,
+        #             ip=item.get('ip'),
+        #             last_access_time=item.get('opened_at'),
+        #             media=item.get('user_name'),
+        #             session_id=item.get('id'),
+        #             token=item.get('token'),
+        #             type='mpegts' if item.get('proto') == 'tshttp' else item.get('proto'),
+        #             user_agent=item.get('user_agent'),
+        #             user_id=item.get('user_id')
+        #         ))
+        #
+        # if new_objects:
+        #     StatusSessionModel.objects.bulk_create(new_objects)
 
         no_deleted = list(StatusSessionModel.objects.filter(deleted_at=1).values_list('session_id', flat=True))
 
