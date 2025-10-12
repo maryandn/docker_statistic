@@ -38,6 +38,7 @@ services:
       - '--server-id=1'
       - '--log-bin=mysql-bin'
       - '--binlog-do-db=flussonic'
+      - '--binlog-expire-logs-seconds=259200'
     env_file:
       - .env
     restart: always

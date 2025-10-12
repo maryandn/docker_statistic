@@ -10,6 +10,7 @@ from rest_framework.renderers import JSONRenderer
 
 from config.models import ServerModel
 from notify_session.models import StatusSessionModel
+from notify_session.serializers import SessionOpenedSerializer
 from statistic.models import SessionModel
 from statistic.serializers import SessionSerializer
 
@@ -115,6 +116,7 @@ class GetStatView(APIView):
 
         dict_for_count = []
         dict_for_deleted = []
+        dict_all_sessions = []
 
         for server in list_server:
             ip = server.get('ip')
