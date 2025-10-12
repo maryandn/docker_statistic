@@ -62,16 +62,16 @@ class StatusPlayStartedView(APIView):
         for data in data_list:
             if data['event'] == 'play_started':
                 data_to_save = {
-                    'bytes_sent': data.get('bytes'),
+                    'bytes_sent': data.get('bytes'), # bytes
                     'country': data.get('country'),
-                    'created_at': data.get('opened_at'),
+                    'created_at': data.get('opened_at'), # opened_at
                     'deleted_at': 1,
                     'ip': data.get('ip'),
                     'last_access_time': data.get('opened_at'),
-                    'media': data.get('media'),
+                    'media': data.get('media'), # user_name
                     'session_id': data.get('id'),
                     'token': data.get('token'),
-                    'type': 'mpegts' if data.get('proto') == 'tshttp' else data.get('proto'),
+                    'type': 'mpegts' if data.get('proto') == 'tshttp' else data.get('proto'), # proto
                     'user_agent': data.get('user_agent'),
                     'user_id': data.get('user_id')
                 }

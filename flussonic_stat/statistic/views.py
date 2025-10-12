@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from django.db.models import Sum
 from django.conf import settings
 from django.core.cache import cache
@@ -119,9 +117,9 @@ class GetStatView(APIView):
         dict_for_deleted = []
 
         for server in list_server:
+            ip = server.get('ip')
+            url = server.get('url')
             try:
-                ip = server.get('ip')
-                url = server.get('url')
                 res = requests.get(
                     f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}/sessions',
                     timeout=5)
@@ -161,7 +159,14 @@ class GetStatView(APIView):
                                 dict_for_count.append(data_dict_items)
 
                             dict_for_deleted.append(i.get('id'))
-            except (requests.ConnectionError, requests.Timeout, requests.RequestException):
+            except requests.ConnectionError as e:
+                send_message_to_tg(f"Error ConnectionError {ip}: {e}")
+                continue
+            except requests.Timeout as e:
+                send_message_to_tg(f"Error Timeout {ip}: {e}")
+                continue
+            except requests.RequestException as e:
+                send_message_to_tg(f"Error RequestException {ip}: {e}")
                 continue
 
         data = unique_and_count(dict_for_count)
@@ -173,12 +178,6 @@ class GetStatView(APIView):
             key = f"{token}:{base_unix_time}"
             existing = cache.get(key, [])
             existing.append(item)
-
-            # cleaned = {
-            #     ts: items
-            #     for ts, items in existing.items()
-            #     if base_unix_time - int(ts) <= 172800000
-            # }
 
             cache.set(key, existing, timeout=172800)
 
