@@ -130,32 +130,54 @@ class GetStatView(APIView):
             StatusSessionModel.objects.filter(deleted_at=1, session_id__in=incoming_ids)
             .values_list('session_id', flat=True))
 
-        new_objects = []
+        # new_objects = []
+        #
+        # for item in filtered_all_sessions:
+        #     if item['id'] not in existing_ids and item.get('type') == 'play':
+        #
+        #         token = item.get('token', '')
+        #         if '?utc=' in token:
+        #             token = token.split('?utc=')[0]
+        #
+        #         new_objects.append(StatusSessionModel(
+        #             bytes_sent=item.get('bytes'),
+        #             country=item.get('country'),
+        #             created_at=item.get('opened_at'),
+        #             deleted_at=1,
+        #             ip=item.get('ip'),
+        #             last_access_time=item.get('opened_at'),
+        #             media=item.get('user_name'),
+        #             session_id=item.get('id'),
+        #             token=token,
+        #             type='mpegts' if item.get('proto') == 'tshttp' else item.get('proto'),
+        #             user_agent=item.get('user_agent'),
+        #             user_id=item.get('user_id')
+        #         ))
+        #
+        # if new_objects:
+        #     StatusSessionModel.objects.bulk_create(new_objects)
 
         for item in filtered_all_sessions:
             if item['id'] not in existing_ids and item.get('type') == 'play':
-
                 token = item.get('token', '')
                 if '?utc=' in token:
                     token = token.split('?utc=')[0]
-
-                new_objects.append(StatusSessionModel(
-                    bytes_sent=item.get('bytes'),
-                    country=item.get('country'),
-                    created_at=item.get('opened_at'),
-                    deleted_at=1,
-                    ip=item.get('ip'),
-                    last_access_time=item.get('opened_at'),
-                    media=item.get('user_name'),
-                    session_id=item.get('id'),
-                    token=token,
-                    type='mpegts' if item.get('proto') == 'tshttp' else item.get('proto'),
-                    user_agent=item.get('user_agent'),
-                    user_id=item.get('user_id')
-                ))
-
-        if new_objects:
-            StatusSessionModel.objects.bulk_create(new_objects)
+                StatusSessionModel.objects.update_or_create(
+                    session_id=item['id'],
+                    defaults={
+                        'bytes_sent': item.get('bytes'),
+                        'country': item.get('country'),
+                        'created_at': item.get('opened_at'),
+                        'deleted_at': 1,
+                        'ip': item.get('ip'),
+                        'last_access_time': item.get('opened_at'),
+                        'media': item.get('user_name'),
+                        'token': token,
+                        'type': 'mpegts' if item.get('proto') == 'tshttp' else item.get('proto'),
+                        'user_agent': item.get('user_agent'),
+                        'user_id': item.get('user_id')
+                    }
+                )
 
         no_deleted = list(StatusSessionModel.objects.filter(deleted_at=1).values_list('session_id', flat=True))
 
