@@ -57,7 +57,7 @@ def mode_db():
             'HOST': 'db',
         }
         get_settings_memcached = '172.17.0.1:11211'
-        get_allowed_hosts = ['*']
+        get_allowed_hosts = ['stat.srv4you.net']
     return get_dict_env_value, get_settings_memcached, get_allowed_hosts
 
 dict_env_value, settings_memcached, allowed_hosts = mode_db()
