@@ -19,7 +19,10 @@ from utils.tg_send_message import send_message_to_tg
 
 
 def canonicalize_dict(x):
-    return sorted(x.items(), key=lambda x: hash(x[0]))
+    return sorted(
+        ((k, '' if v is None else v) for k, v in x.items()),
+        key=lambda x: hash(x[0])
+    )
 
 
 def unique_and_count(lst):
@@ -65,7 +68,6 @@ class GetStatView(APIView):
 
         list_all_sessions = []
         list_for_count = []
-        list_for_deleted = []
 
         for server in list_server:
             ip = server.get('ip')
@@ -90,8 +92,16 @@ class GetStatView(APIView):
                 send_message_to_tg(f"Error RequestException {ip}: {e}")
                 continue
 
-        filtered_all_sessions = [session for session in list_all_sessions if
-                                 session.get('type') == 'play' and session.get('duration', 0) > 60000]
+        list_for_deleted = [
+            session.get('id') for session in list_all_sessions
+            if session.get('type') == 'play'
+        ]
+
+        filtered_all_sessions = [session for session in list_all_sessions
+                                 if session.get('type') == 'play'
+                                 and session.get('duration', 0) > 60000
+                                 and session.get('token')
+                                 and session.get('user_id')]
 
         for session in filtered_all_sessions:
             data_dict_items = {
@@ -123,7 +133,12 @@ class GetStatView(APIView):
         new_objects = []
 
         for item in filtered_all_sessions:
-            if item['id'] not in existing_ids:
+            if item['id'] not in existing_ids and item.get('type') == 'play':
+
+                token = item.get('token', '')
+                if '?utc=' in token:
+                    token = token.split('?utc=')[0]
+
                 new_objects.append(StatusSessionModel(
                     bytes_sent=item.get('bytes'),
                     country=item.get('country'),
@@ -133,7 +148,7 @@ class GetStatView(APIView):
                     last_access_time=item.get('opened_at'),
                     media=item.get('user_name'),
                     session_id=item.get('id'),
-                    token=item.get('token'),
+                    token=token,
                     type='mpegts' if item.get('proto') == 'tshttp' else item.get('proto'),
                     user_agent=item.get('user_agent'),
                     user_id=item.get('user_id')
