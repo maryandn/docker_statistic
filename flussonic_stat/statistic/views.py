@@ -30,50 +30,50 @@ def unique_and_count(lst):
     return [dict(k + [("count", len(list(g)))]) for k, g in grouper]
 
 
-class TokenMysqlStatView(generics.ListAPIView):
-    renderer_classes = [JSONRenderer]
-    serializer_class = SessionSerializer
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
-        date_list = [base_unix_time - x * 60000 for x in range(24 * 60)]
-
-        result = SessionModel.objects.filter(time__in=date_list)
-        return result
-
-    def get(self, request, *args, **kwargs):
-        base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
-        date_list = [base_unix_time - x * 60000 for x in range(24 * 60)]
-
-        qs = self.get_queryset()
-        token_or_ip = kwargs.get('pk')
-
-        if token_or_ip.count('.') == 3 and all(0 <= int(num) < 256 for num in token_or_ip.rstrip().split('.')):
-            result = qs.filter(ip=token_or_ip).values_list('time').annotate(
-                count=Sum('count')).order_by('time')
-
-            diff = list(set(date_list) - set([i[0] for i in list(result)]))
-            result = list(result)
-
-            for i in diff:
-                result.append((i, 0))
-
-            result.sort(key=lambda tup: tup[0])
-
-        else:
-            result = qs.filter(token=token_or_ip).values_list('time').annotate(
-                count=Sum('count')).order_by('time')
-
-            diff = list(set(date_list) - set([i[0] for i in list(result)]))
-            result = list(result)
-
-            for i in diff:
-                result.append((i, 0))
-
-            result.sort(key=lambda tup: tup[0])
-
-        return Response(result, status.HTTP_200_OK)
+# class TokenMysqlStatView(generics.ListAPIView):
+#     renderer_classes = [JSONRenderer]
+#     serializer_class = SessionSerializer
+#     permission_classes = [AllowAny]
+#
+#     def get_queryset(self):
+#         base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
+#         date_list = [base_unix_time - x * 60000 for x in range(24 * 60)]
+#
+#         result = SessionModel.objects.filter(time__in=date_list)
+#         return result
+#
+#     def get(self, request, *args, **kwargs):
+#         base_unix_time = int(datetime.datetime.now().strftime('%s')) // 60 * 60 * 1000
+#         date_list = [base_unix_time - x * 60000 for x in range(24 * 60)]
+#
+#         qs = self.get_queryset()
+#         token_or_ip = kwargs.get('pk')
+#
+#         if token_or_ip.count('.') == 3 and all(0 <= int(num) < 256 for num in token_or_ip.rstrip().split('.')):
+#             result = qs.filter(ip=token_or_ip).values_list('time').annotate(
+#                 count=Sum('count')).order_by('time')
+#
+#             diff = list(set(date_list) - set([i[0] for i in list(result)]))
+#             result = list(result)
+#
+#             for i in diff:
+#                 result.append((i, 0))
+#
+#             result.sort(key=lambda tup: tup[0])
+#
+#         else:
+#             result = qs.filter(token=token_or_ip).values_list('time').annotate(
+#                 count=Sum('count')).order_by('time')
+#
+#             diff = list(set(date_list) - set([i[0] for i in list(result)]))
+#             result = list(result)
+#
+#             for i in diff:
+#                 result.append((i, 0))
+#
+#             result.sort(key=lambda tup: tup[0])
+#
+#         return Response(result, status.HTTP_200_OK)
 
 
 class TokenCacheStatView(APIView):

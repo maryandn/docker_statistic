@@ -115,63 +115,63 @@ class StatusPlayClosedView(APIView):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class StatusSessionsView(APIView):
-    serializer_class = SessionOpenedSerializer, SessionClosedSerializer
-
-    def post(self, request):
-
-        ip = get_client_ip(request)
-        qs_server_ip_access = ServerModel.objects.filter(ip=ip)
-        if not qs_server_ip_access.exists():
-            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
-
-        url = qs_server_ip_access.values()[0]['url']
-        data_list = request.data
-
-        for data in data_list:
-            if data['event'] == 'session_opened':
-                user_id = data.get('user_id')
-                media = data.get('media')
-                session_id = data.get('session_id')
-                res = requests.get(
-                    f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}/sessions?user_id={user_id}&name={media}')
-                obj = next(item for item in res.json()['sessions'] if item["session_id"] == session_id)
-
-                data_to_save = {
-                    'bytes_sent': data.get('bytes_sent'),
-                    'country': data.get('country'),
-                    'created_at': data.get('created_at'),
-                    'deleted_at': 1,
-                    'ip': obj.get('ip'),
-                    'last_access_time': data.get('created_at'),
-                    'media': media,
-                    'session_id': session_id,
-                    'token': data.get('token'),
-                    'type': data.get('type'),
-                    'user_agent': data.get('user_agent'),
-                    'user_id': user_id
-                }
-                serializer = SessionOpenedSerializer(data=data_to_save)
-                if not serializer.is_valid():
-                    return Response(serializer.errors)
-                serializer.save()
-
-            elif data['event'] == 'session_closed':
-                session_id = data['session_id']
-                if data['token'].find('?utc=') > 0:
-                    data['token'] = data['token'].split('?utc=')[0]
-                StatusSessionModel.objects.filter(session_id=session_id).update(bytes_sent=data['bytes_sent'],
-                                                                                deleted_at=data['deleted_at'])
-
-                last_sessions = StatusSessionModel.objects.filter(token=data['token']).exclude(deleted_at=1)
-
-                if len(last_sessions) > 10:
-                    list_for_clear = list(last_sessions.values_list('id', flat=True))[:-10]
-                    del_session_for_user = StatusSessionModel.objects.filter(id__in=list_for_clear)
-                    del_session_for_user.delete()
-            else:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            return Response(status=status.HTTP_200_OK)
+# class StatusSessionsView(APIView):
+#     serializer_class = SessionOpenedSerializer, SessionClosedSerializer
+#
+#     def post(self, request):
+#
+#         ip = get_client_ip(request)
+#         qs_server_ip_access = ServerModel.objects.filter(ip=ip)
+#         if not qs_server_ip_access.exists():
+#             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+#
+#         url = qs_server_ip_access.values()[0]['url']
+#         data_list = request.data
+#
+#         for data in data_list:
+#             if data['event'] == 'session_opened':
+#                 user_id = data.get('user_id')
+#                 media = data.get('media')
+#                 session_id = data.get('session_id')
+#                 res = requests.get(
+#                     f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}/sessions?user_id={user_id}&name={media}')
+#                 obj = next(item for item in res.json()['sessions'] if item["session_id"] == session_id)
+#
+#                 data_to_save = {
+#                     'bytes_sent': data.get('bytes_sent'),
+#                     'country': data.get('country'),
+#                     'created_at': data.get('created_at'),
+#                     'deleted_at': 1,
+#                     'ip': obj.get('ip'),
+#                     'last_access_time': data.get('created_at'),
+#                     'media': media,
+#                     'session_id': session_id,
+#                     'token': data.get('token'),
+#                     'type': data.get('type'),
+#                     'user_agent': data.get('user_agent'),
+#                     'user_id': user_id
+#                 }
+#                 serializer = SessionOpenedSerializer(data=data_to_save)
+#                 if not serializer.is_valid():
+#                     return Response(serializer.errors)
+#                 serializer.save()
+#
+#             elif data['event'] == 'session_closed':
+#                 session_id = data['session_id']
+#                 if data['token'].find('?utc=') > 0:
+#                     data['token'] = data['token'].split('?utc=')[0]
+#                 StatusSessionModel.objects.filter(session_id=session_id).update(bytes_sent=data['bytes_sent'],
+#                                                                                 deleted_at=data['deleted_at'])
+#
+#                 last_sessions = StatusSessionModel.objects.filter(token=data['token']).exclude(deleted_at=1)
+#
+#                 if len(last_sessions) > 10:
+#                     list_for_clear = list(last_sessions.values_list('id', flat=True))[:-10]
+#                     del_session_for_user = StatusSessionModel.objects.filter(id__in=list_for_clear)
+#                     del_session_for_user.delete()
+#             else:
+#                 return Response(status=status.HTTP_400_BAD_REQUEST)
+#             return Response(status=status.HTTP_200_OK)
 
 
 class OpenedClosedSessionsView(ObjectMultipleModelAPIView):
