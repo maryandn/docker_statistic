@@ -1,11 +1,10 @@
 from django.urls import path
 from . import views
-from .views import StatusSessionsView, OpenedClosedSessionsView, OpenedSessionsForBillingView, \
+from .views import OpenedClosedSessionsView, OpenedSessionsForBillingView, \
     StatForUserConnectionsView, StatusPlayClosedView, StatusPlayStartedView, StatForUserConnectionsIpView, \
     StatForUserConnectionsSessionView
 
 urlpatterns = [
-    path('', StatusSessionsView.as_view()),
     path('play_started', StatusPlayStartedView.as_view()),
     path('play_closed', StatusPlayClosedView.as_view()),
     path('rq/', views.notify),
