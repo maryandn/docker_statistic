@@ -1,5 +1,5 @@
 from django.urls import path
-from statistic.views import GetStatView, TokenMysqlStatView, TokenCacheStatView
+from statistic.views import GetStatView, TokenCacheStatView
 
 urlpatterns = [
     path('getstat', GetStatView.as_view()),
