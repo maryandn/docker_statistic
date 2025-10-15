@@ -47,7 +47,7 @@ def mode_db():
             'HOST': 'localhost',
         }
         get_settings_memcached = '127.0.0.1:11211'
-        get_allowed_hosts = ['localhost', '127.0.0.1']
+        get_allowed_hosts = ['localhost', '127.0.0.1', '185.162.9.205']
     else:
         get_dict_env_value = {
             'ENGINE': 'django.db.backends.mysql',

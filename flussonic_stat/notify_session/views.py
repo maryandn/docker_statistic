@@ -1,6 +1,7 @@
 import json
 import time
 
+from django.conf import settings
 from django.db.models import Count
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -49,10 +50,11 @@ class StatusPlayStartedView(APIView):
 
     def post(self, request):
 
-        ip = get_client_ip(request)
-        qs_server_ip_access = ServerModel.objects.filter(ip=ip)
-        if not qs_server_ip_access.exists():
-            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+        if not settings.DEBUG:
+            ip = get_client_ip(request)
+            qs_server_ip_access = ServerModel.objects.filter(ip=ip)
+            if not qs_server_ip_access.exists():
+                return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
         data_list = request.data
 
@@ -88,10 +90,11 @@ class StatusPlayClosedView(APIView):
 
     def post(self, request):
 
-        ip = get_client_ip(request)
-        qs_server_ip_access = ServerModel.objects.filter(ip=ip)
-        if not qs_server_ip_access.exists():
-            return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+        if not settings.DEBUG:
+            ip = get_client_ip(request)
+            qs_server_ip_access = ServerModel.objects.filter(ip=ip)
+            if not qs_server_ip_access.exists():
+                return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
         data_list = request.data
 
