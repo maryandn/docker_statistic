@@ -36,14 +36,10 @@ class ChannelListView(APIView):
         ip = get_client_ip(request)
         qs_server_ip_access = ServerModel.objects.filter(ip=ip)
 
-        send_message_to_tg(f'Start statistic for {ip}')
-
         if not qs_server_ip_access.exists():
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
         url = qs_server_ip_access.values()[0]['url']
-
-        send_message_to_tg(f'Start statistic for {url}')
 
         try:
             if data['event'] == 'config_reloaded':
@@ -78,6 +74,7 @@ class ChannelListView(APIView):
             else:
                 print('other_event')
             return Response(status=status.HTTP_200_OK)
-        except:
-            send_message_to_tg('Error')
+        except Exception as e:
+            error_text = f"Помилка: {type(e).__name__} - {str(e)}"
+            send_message_to_tg(error_text)
             return Response(status=status.HTTP_400_BAD_REQUEST)
