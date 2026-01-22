@@ -36,6 +36,8 @@ class ChannelListView(APIView):
         ip = get_client_ip(request)
         qs_server_ip_access = ServerModel.objects.filter(ip=ip)
 
+        send_message_to_tg(f'Start statistic for {ip}')
+
         if not qs_server_ip_access.exists():
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
