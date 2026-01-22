@@ -43,6 +43,8 @@ class ChannelListView(APIView):
 
         url = qs_server_ip_access.values()[0]['url']
 
+        send_message_to_tg(f'Start statistic for {url}')
+
         try:
             if data['event'] == 'config_reloaded':
                 res = request_flussonic(ip, url)
