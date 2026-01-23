@@ -44,14 +44,16 @@ class ChannelListView(APIView):
         try:
             if data['event'] == 'config_reloaded':
                 res = request_flussonic(ip, url)
-                list_channels = res.get('streams')
-                list_of_dict = []
-                for item in list_channels:
-                    dict_channel = {'name_channel': item.get('name'), 'title_channel': item.get('title')}
-                    list_of_dict.append(dict_channel)
-                for channel in list_of_dict:
-                    name_channel = channel.pop('name_channel')
-                    ChannelListModel.objects.update_or_create(name_channel=name_channel, defaults=channel)
+                list_channels = res.get('streams', [])
+
+                for channel in list_channels:
+                    name = channel.get('name', '')
+                    title = channel.get('title', '')
+
+                    if len(name) > 6:
+                        continue
+
+                    ChannelListModel.objects.update_or_create(name_channel=name, defaults={'title_channel': title})
 
                 # count sources
                 list_server = ServerModel.objects.all().values('ip', 'url')
