@@ -50,7 +50,7 @@ class ChannelListView(APIView):
                     name = channel.get('name', '')
                     title = channel.get('title', '')
 
-                    if len(name) > 6:
+                    if len(name) > 7:
                         continue
 
                     ChannelListModel.objects.update_or_create(name_channel=name, defaults={'title_channel': title})
