@@ -68,6 +68,7 @@ class GetStatView(APIView):
 
         list_all_sessions = []
         list_for_count = []
+        new_sessions_to_create = []
 
         for server in list_server:
             ip = server.get('ip')
@@ -126,63 +127,37 @@ class GetStatView(APIView):
             cache.set(key, existing, timeout=172800)
 
         incoming_ids = [item['id'] for item in filtered_all_sessions]
+
         existing_ids = set(
             StatusSessionModel.objects.filter(deleted_at=1, session_id__in=incoming_ids)
             .values_list('session_id', flat=True))
 
-        # new_objects = []
-        #
-        # for item in filtered_all_sessions:
-        #     if item['id'] not in existing_ids and item.get('type') == 'play':
-        #
-        #         token = item.get('token', '')
-        #         if '?utc=' in token:
-        #             token = token.split('?utc=')[0]
-        #
-        #         new_objects.append(StatusSessionModel(
-        #             bytes_sent=item.get('bytes'),
-        #             country=item.get('country'),
-        #             created_at=item.get('opened_at'),
-        #             deleted_at=1,
-        #             ip=item.get('ip'),
-        #             last_access_time=item.get('opened_at'),
-        #             media=item.get('user_name'),
-        #             session_id=item.get('id'),
-        #             token=token,
-        #             type='mpegts' if item.get('proto') == 'tshttp' else item.get('proto'),
-        #             user_agent=item.get('user_agent'),
-        #             user_id=item.get('user_id')
-        #         ))
-        #
-        # if new_objects:
-        #     StatusSessionModel.objects.bulk_create(new_objects)
-
         for item in filtered_all_sessions:
-            if item['id'] not in existing_ids and item.get('type') == 'play':
-                token = item.get('token', '')
-                if '?utc=' in token:
-                    token = token.split('?utc=')[0]
-                StatusSessionModel.objects.update_or_create(
+            if item['id'] not in existing_ids:
+                token = item.get('token', '').split('?utc=')[0]
+
+                new_sessions_to_create.append(StatusSessionModel(
                     session_id=item['id'],
-                    defaults={
-                        'bytes_sent': item.get('bytes'),
-                        'country': item.get('country'),
-                        'created_at': item.get('opened_at'),
-                        'deleted_at': 1,
-                        'ip': item.get('ip'),
-                        'last_access_time': item.get('opened_at'),
-                        'media': item.get('user_name'),
-                        'token': token,
-                        'type': 'mpegts' if item.get('proto') == 'tshttp' else item.get('proto'),
-                        'user_agent': item.get('user_agent'),
-                        'user_id': item.get('user_id')
-                    }
-                )
+                    bytes_sent=item.get('bytes'),
+                    country=item.get('country'),
+                    created_at=item.get('opened_at'),
+                    deleted_at=1,
+                    ip=item.get('ip'),
+                    last_access_time=item.get('opened_at'),
+                    media=item.get('user_name'),
+                    token=token,
+                    type='mpegts' if item.get('proto') == 'tshttp' else item.get('proto'),
+                    user_agent=item.get('user_agent'),
+                    user_id=item.get('user_id')
+                ))
 
-        no_deleted = list(StatusSessionModel.objects.filter(deleted_at=1).values_list('session_id', flat=True))
+        if new_sessions_to_create:
+            StatusSessionModel.objects.bulk_create(new_sessions_to_create)
 
+        no_deleted = StatusSessionModel.objects.filter(deleted_at=1).values_list('session_id', flat=True)
         res_for_deleted_at = list(set(no_deleted) - set(list_for_deleted))
 
-        StatusSessionModel.objects.filter(session_id__in=res_for_deleted_at).update(deleted_at=base_unix_time)
+        if res_for_deleted_at:
+            StatusSessionModel.objects.filter(session_id__in=res_for_deleted_at).update(deleted_at=base_unix_time)
 
         return Response(status=status.HTTP_200_OK)
