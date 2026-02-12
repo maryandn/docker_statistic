@@ -164,5 +164,3 @@ class GetStatView(APIView):
             StatusSessionModel.objects.filter(session_id__in=res_for_deleted_at).update(deleted_at=base_unix_time)
 
         return Response(status=status.HTTP_200_OK)
-
-    def sy
