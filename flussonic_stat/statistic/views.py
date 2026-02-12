@@ -61,6 +61,9 @@ class GetStatView(APIView):
     serializer_class = SessionSerializer
     permission_classes = [AllowAny]
 
+    async def fetch_server_stats(self, client, server):
+        pass
+
     def get(self, request, *args, **kwargs):
 
         base_unix_time = int(time.time() // 60 * 60 * 1000)
@@ -161,3 +164,5 @@ class GetStatView(APIView):
             StatusSessionModel.objects.filter(session_id__in=res_for_deleted_at).update(deleted_at=base_unix_time)
 
         return Response(status=status.HTTP_200_OK)
+
+    def sy
