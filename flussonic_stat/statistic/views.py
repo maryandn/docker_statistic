@@ -1,5 +1,12 @@
+import time
+import asyncio
+import httpx
+from itertools import groupby
+from asgiref.sync import sync_to_async
+
 from django.conf import settings
 from django.core.cache import cache
+from django.db import transaction
 
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
@@ -10,10 +17,6 @@ from rest_framework.renderers import JSONRenderer
 from config.models import ServerModel
 from notify_session.models import StatusSessionModel
 from statistic.serializers import SessionSerializer
-
-import requests
-from itertools import groupby
-import time
 
 from utils.tg_send_message import send_message_to_tg
 
@@ -62,50 +65,115 @@ class GetStatView(APIView):
     permission_classes = [AllowAny]
 
     async def fetch_server_stats(self, client, server):
-        pass
+
+        ip = server.get('ip')
+        url = server.get('url')
+        endpoint = f"http://{ip}:89/{url}/sessions"
+        auth = (settings.FLUSSONIC_LOGIN, settings.FLUSSONIC_PASSWORD)
+
+        try:
+            response = await client.get(endpoint, auth=auth, timeout=10.0)
+            response.raise_for_status()
+            res = response.json()
+            return res.get('sessions') or res.get('items') or []
+        except Exception as e:
+            await sync_to_async(send_message_to_tg)(f"Error connecting to {ip}: {e}")
+            return []
 
     def get(self, request, *args, **kwargs):
 
         base_unix_time = int(time.time() // 60 * 60 * 1000)
-        list_server = ServerModel.objects.all().values('ip', 'url')
+        list_server = list(ServerModel.objects.all().values('ip', 'url'))
 
-        list_all_sessions = []
-        list_for_count = []
-        new_sessions_to_create = []
+        async def run_requests():
+            async with httpx.AsyncClient() as client:
+                tasks = [self.fetch_server_stats(client, s) for s in list_server]
+                return await asyncio.gather(*tasks)
 
-        for server in list_server:
-            ip = server.get('ip')
-            url = server.get('url')
-            try:
-                res = requests.get(
-                    f'http://{settings.FLUSSONIC_LOGIN}:{settings.FLUSSONIC_PASSWORD}@{ip}:89/{url}/sessions',
-                    timeout=5)
-                res.raise_for_status()
-                res = res.json()
-                if res.get('sessions', False):
-                    list_all_sessions.extend(res['sessions'])
-                elif res.get('items', False):
-                    list_all_sessions.extend(res['items'])
-            except requests.ConnectionError as e:
-                send_message_to_tg(f"Error ConnectionError {ip}: {e}")
-                continue
-            except requests.Timeout as e:
-                send_message_to_tg(f"Error Timeout {ip}: {e}")
-                continue
-            except requests.RequestException as e:
-                send_message_to_tg(f"Error RequestException {ip}: {e}")
-                continue
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            results = loop.run_until_complete(run_requests())
+        finally:
+            loop.close()
 
-        list_for_deleted = [
-            session.get('id') for session in list_all_sessions
-            if session.get('type') == 'play'
+        list_all_sessions = [item for sublist in results for item in sublist]
+
+        self.process_and_save(list_all_sessions, base_unix_time)
+
+        return Response(status=status.HTTP_200_OK)
+
+    def process_and_save(self, list_all_sessions, base_unix_time):
+
+        list_for_deleted = [s.get('id') for s in list_all_sessions if s.get('type') == 'play']
+
+        filtered_sessions = [
+            s for s in list_all_sessions
+            if s.get('type') == 'play'
+               and s.get('duration', 0) > 60000
+               and s.get('token')
+               and s.get('user_id')
         ]
 
-        filtered_all_sessions = [session for session in list_all_sessions
-                                 if session.get('type') == 'play'
-                                 and session.get('duration', 0) > 60000
-                                 and session.get('token')
-                                 and session.get('user_id')]
+        self.sync_cash(filtered_sessions, base_unix_time)
+
+        incoming_ids = [s['id'] for s in filtered_sessions]
+
+        with transaction.atomic():
+
+            existing_sessions_dict = {
+                obj.session_id: obj
+                for obj in StatusSessionModel.objects.filter(session_id__in=incoming_ids)
+            }
+
+            self._create_missing_sessions(filtered_sessions, existing_sessions_dict)
+            self._resurrect_mistakenly_closed_sessions(incoming_ids, existing_sessions_dict)
+            self._close_expired_sessions(list_for_deleted, base_unix_time)
+
+    def _create_missing_sessions(self, filtered_sessions, existing_sessions_dict):
+
+        new_records = []
+        for item in filtered_sessions:
+            if item['id'] not in existing_sessions_dict:
+                token = item.get('token', '').split('?utc=')[0]
+                raw_user_agent = item.get('user_agent') or ""
+                truncated_user_agent = raw_user_agent[:255]
+                new_records.append(StatusSessionModel(
+                    session_id=item['id'],
+                    bytes_sent=item.get('bytes'),
+                    country=item.get('country'),
+                    created_at=item.get('opened_at'),
+                    deleted_at=1,
+                    ip=item.get('ip'),
+                    last_access_time=item.get('opened_at'),
+                    media=item.get('user_name'),
+                    token=token,
+                    type='mpegts' if item.get('proto') == 'tshttp' else item.get('proto'),
+                    user_agent=truncated_user_agent,
+                    user_id=item.get('user_id')
+                ))
+
+        if new_records:
+            StatusSessionModel.objects.bulk_create(new_records)
+
+    def _resurrect_mistakenly_closed_sessions(self, incoming_ids, existing_sessions_dict):
+        ids_to_resurrect = [
+            s_id for s_id in incoming_ids
+            if s_id in existing_sessions_dict and existing_sessions_dict[s_id].deleted_at != 1
+        ]
+
+        if ids_to_resurrect:
+            StatusSessionModel.objects.filter(session_id__in=ids_to_resurrect).update(deleted_at=1)
+
+    def _close_expired_sessions(self, list_for_deleted, base_unix_time):
+        StatusSessionModel.objects.filter(
+            deleted_at=1
+        ).exclude(
+            session_id__in=list_for_deleted
+        ).update(deleted_at=base_unix_time)
+
+    def sync_cash(self, filtered_all_sessions, base_unix_time):
+        list_for_count = []
 
         for session in filtered_all_sessions:
             data_dict_items = {
@@ -128,39 +196,3 @@ class GetStatView(APIView):
             existing.append(item)
 
             cache.set(key, existing, timeout=172800)
-
-        incoming_ids = [item['id'] for item in filtered_all_sessions]
-
-        existing_ids = set(
-            StatusSessionModel.objects.filter(deleted_at=1, session_id__in=incoming_ids)
-            .values_list('session_id', flat=True))
-
-        for item in filtered_all_sessions:
-            if item['id'] not in existing_ids:
-                token = item.get('token', '').split('?utc=')[0]
-
-                new_sessions_to_create.append(StatusSessionModel(
-                    session_id=item['id'],
-                    bytes_sent=item.get('bytes'),
-                    country=item.get('country'),
-                    created_at=item.get('opened_at'),
-                    deleted_at=1,
-                    ip=item.get('ip'),
-                    last_access_time=item.get('opened_at'),
-                    media=item.get('user_name'),
-                    token=token,
-                    type='mpegts' if item.get('proto') == 'tshttp' else item.get('proto'),
-                    user_agent=item.get('user_agent'),
-                    user_id=item.get('user_id')
-                ))
-
-        if new_sessions_to_create:
-            StatusSessionModel.objects.bulk_create(new_sessions_to_create)
-
-        no_deleted = StatusSessionModel.objects.filter(deleted_at=1).values_list('session_id', flat=True)
-        res_for_deleted_at = list(set(no_deleted) - set(list_for_deleted))
-
-        if res_for_deleted_at:
-            StatusSessionModel.objects.filter(session_id__in=res_for_deleted_at).update(deleted_at=base_unix_time)
-
-        return Response(status=status.HTTP_200_OK)

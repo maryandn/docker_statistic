@@ -101,13 +101,13 @@ class StatusPlayClosedView(APIView):
         list_play_closed = [d for d in data_list if d.get('event') == 'play_closed']
 
         for data in list_play_closed:
+
             session_id = data['id']
-            if data['token'].find('?utc=') > 0:
-                data['token'] = data['token'].split('?utc=')[0]
+            token = (data.get('token') or '').split('?utc=')[0]
             StatusSessionModel.objects.filter(session_id=session_id).update(bytes_sent=data['bytes'],
                                                                             deleted_at=data['closed_at'])
 
-            last_sessions = StatusSessionModel.objects.filter(token=data['token']).exclude(deleted_at=1)
+            last_sessions = StatusSessionModel.objects.filter(token=token).exclude(deleted_at=1)
 
             if len(last_sessions) > 10:
                 list_for_clear = list(last_sessions.values_list('id', flat=True))[:-10]

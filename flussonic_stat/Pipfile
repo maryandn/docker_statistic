@@ -12,6 +12,7 @@ django-cors-headers = "*"
 mysqlclient = "*"
 django-rest-multiple-models = "*"
 pymemcache = "*"
+httpx = "*"
 
 [dev-packages]
 
