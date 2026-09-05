@@ -48,7 +48,8 @@ class AstraMonitoringView(APIView):
             list_id_astra = []
             for item in res:
                 item_separator = item.find('http')
-                name_channel = item[10:item_separator]
+                raw_header = item[:item_separator]
+                name_channel = raw_header.rsplit(',', 1)[-1].strip()
                 id_channel = item[-15:-11]
                 list_id_astra.append(id_channel)
                 data_item = {
