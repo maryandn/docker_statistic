@@ -99,15 +99,17 @@ def get_latest_tokens_summary():
         return latest_ts, []
 
     key_to_token = {f"{token}:{latest_ts}": token for token in active_tokens}
-
     cached_data = cache.get_many(list(key_to_token.keys()))
 
     results = []
     for key, token in key_to_token.items():
-        # Дані мають вигляд: [{'user_id': uid, 'count': cnt}, ...]
         items = cached_data.get(key)
         if items:
             total_count = sum(i.get("count", 0) for i in items)
+
+            if total_count < 2:
+                continue
+
             results.append({
                 "token": token,
                 "total_count": total_count,
