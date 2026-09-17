@@ -1,17 +1,16 @@
-import json
 import requests
 
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
 from config.models import ServerModel, SourceModel
 from notify_channel.models import ChannelListModel
 from notify_channel.serializers import ChannelListSerializer
 from utils.get_client_ip import get_client_ip
+from utils.is_ip_allowed import get_server_url_by_ip
 from utils.tg_send_message import send_message_to_tg
 
 
@@ -21,25 +20,18 @@ def request_flussonic(ip, url):
     return res
 
 
-@csrf_exempt
-def notify(request):
-    print(json.loads(request.body)[0])
-    return HttpResponse('')
-
-
 class ChannelListView(APIView):
     serializer_class = ChannelListSerializer
 
     def post(self, request):
 
-        data = request.data[0]
         ip = get_client_ip(request)
-        qs_server_ip_access = ServerModel.objects.filter(ip=ip)
+        url = get_server_url_by_ip(ip)
 
-        if not qs_server_ip_access.exists():
+        if not url:
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
-        url = qs_server_ip_access.values()[0]['url']
+        data = request.data[0]
 
         try:
             if data['event'] == 'config_reloaded':

@@ -35,7 +35,7 @@ MYSQL_PASSWORD_PRODUCTIONS = conf.get("MYSQL_PASSWORD_PRODUCTIONS")
 MYSQL_ROOT_PASSWORD_PRODUCTIONS = conf.get("MYSQL_ROOT_PASSWORD_PRODUCTIONS")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 def mode_db():
     if DEBUG:

@@ -1,7 +1,4 @@
-import time
-
 from django.conf import settings
-from django.db.models import Count
 from django.http import HttpResponse
 from drf_multiple_model.views import ObjectMultipleModelAPIView
 from rest_framework import status
@@ -10,11 +7,11 @@ from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from config.models import ServerModel
 from notify_session.models import StatusSessionModel
 from notify_session.serializers import SessionOpenedSerializer, \
     OpenedSessionsForBillingSerializer
 from utils.get_client_ip import get_client_ip
+from utils.is_ip_allowed import is_ip_allowed
 
 
 def transform_data(data):
@@ -43,8 +40,7 @@ class StatusPlayStartedView(APIView):
 
         if not settings.DEBUG:
             ip = get_client_ip(request)
-            qs_server_ip_access = ServerModel.objects.filter(ip=ip)
-            if not qs_server_ip_access.exists():
+            if not is_ip_allowed(ip):
                 return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
         data_list = request.data
@@ -83,8 +79,7 @@ class StatusPlayClosedView(APIView):
 
         if not settings.DEBUG:
             ip = get_client_ip(request)
-            qs_server_ip_access = ServerModel.objects.filter(ip=ip)
-            if not qs_server_ip_access.exists():
+            if not is_ip_allowed(ip):
                 return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
         data_list = request.data
@@ -141,36 +136,3 @@ class OpenedSessionsForBillingView(ListAPIView):
         token = self.kwargs.get('pk')
         qs = self.model.objects.filter(token=token, deleted_at=1)
         return qs
-
-
-class StatForUserConnectionsView(APIView):
-
-    def get(self, request, *args, **kwargs):
-        token = kwargs.get('token')
-        qs = StatusSessionModel.objects.filter(token=token, deleted_at=1,
-                                               created_at__lt=round(time.time() * 1000) - 45000).order_by('-created_at')
-
-        return Response(
-            {
-                'all_count': qs.count(),
-                'data': transform_data(SessionOpenedSerializer(qs, many=True).data)
-            }, status.HTTP_200_OK)
-
-
-class StatForUserConnectionsIpView(APIView):
-
-    def get(self, request, *args, **kwargs):
-        token = kwargs.get('token')
-        qs = StatusSessionModel.objects.filter(token=token, deleted_at=1,
-                                               created_at__lt=round(time.time() * 1000) - 45000).values('ip').distinct()
-        return Response(qs, status.HTTP_200_OK)
-
-
-class StatForUserConnectionsSessionView(APIView):
-
-    def get(self, request, *args, **kwargs):
-        token = kwargs.get('token')
-        qs = StatusSessionModel.objects.filter(token=token, deleted_at=1,
-                                               created_at__lt=round(time.time() * 1000) - 45000).aggregate(
-            all_count=Count('id'))
-        return Response(qs, status.HTTP_200_OK)

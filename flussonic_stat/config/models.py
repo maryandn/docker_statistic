@@ -1,5 +1,8 @@
 from django.db import models
+from django.core.cache import cache
 
+ALLOWED_IPS_CACHE_KEY = "allowed_server_ips"
+ALLOWED_IPS_TTL = 86400
 
 class ProviderModel(models.Model):
     class Meta:
@@ -33,3 +36,14 @@ class ServerModel(models.Model):
     dyndns = models.CharField(unique=True, max_length=255)
     url = models.CharField(unique=False, max_length=255, blank=True)
     ip = models.GenericIPAddressField()
+
+    def __str__(self):
+        return f"{self.dyndns} ({self.ip})"
+
+    def save(self, *args, **kwargs):
+        cache.delete(ALLOWED_IPS_CACHE_KEY)
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        cache.delete(ALLOWED_IPS_CACHE_KEY)
+        super().delete(*args, **kwargs)
