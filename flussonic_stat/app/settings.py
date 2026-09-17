@@ -184,5 +184,8 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
         'LOCATION': settings_memcached,
         'TIMEOUT': 172800,
+        'OPTIONS': {
+            'ignore_exc': True,
+        }
     }
 }

@@ -1,10 +1,8 @@
-import json
 import time
 
 from django.conf import settings
 from django.db.models import Count
 from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
 from drf_multiple_model.views import ObjectMultipleModelAPIView
 from rest_framework import status
 from rest_framework.generics import ListAPIView
@@ -14,7 +12,7 @@ from rest_framework.response import Response
 
 from config.models import ServerModel
 from notify_session.models import StatusSessionModel
-from notify_session.serializers import SessionOpenedSerializer, SessionClosedSerializer, \
+from notify_session.serializers import SessionOpenedSerializer, \
     OpenedSessionsForBillingSerializer
 from utils.get_client_ip import get_client_ip
 
@@ -36,13 +34,6 @@ def transform_data(data):
                                   "sessions": [{"media": media, 'created_at': created_at, "session_id": session_id}]}
 
     return list(sessions_by_ip.values())
-
-
-@csrf_exempt
-def notify(request):
-    ip = get_client_ip(request)
-    print(json.loads(request.body))
-    return HttpResponse('')
 
 
 class StatusPlayStartedView(APIView):

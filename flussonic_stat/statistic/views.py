@@ -1,7 +1,8 @@
 import time
 import asyncio
 import httpx
-from itertools import groupby
+import logging
+from collections import defaultdict
 from asgiref.sync import sync_to_async
 
 from django.conf import settings
@@ -20,17 +21,124 @@ from statistic.serializers import SessionSerializer
 
 from utils.tg_send_message import send_message_to_tg
 
+logger = logging.getLogger(__name__)
 
-def canonicalize_dict(x):
-    return sorted(
-        ((k, '' if v is None else v) for k, v in x.items()),
-        key=lambda x: hash(x[0])
-    )
+GLOBAL_TOKENS_KEY = "active_tokens_registry"
+CACHE_TTL = 172800  # 48 hours
 
 
-def unique_and_count(lst):
-    grouper = groupby(sorted(map(canonicalize_dict, lst)))
-    return [dict(k + [("count", len(list(g)))]) for k, g in grouper]
+def is_memcached_available() -> bool:
+    try:
+        ping_key = "__healthcheck_ping__"
+        cache.set(ping_key, "pong", timeout=10)
+        result = cache.get(ping_key)
+        return result == "pong"
+    except Exception as e:
+        logger.warning(f"Healthcheck error: {e}")
+        return False
+
+
+def safe_cache_get(key, default=None):
+    try:
+        return cache.get(key, default)
+    except Exception as e:
+        logger.warning(f"Cache get error for key '{key}': {e}")
+        return default
+
+
+def safe_cache_set(key, value, timeout=CACHE_TTL):
+    try:
+        cache.set(key, value, timeout=timeout)
+    except Exception as e:
+        logger.warning(f"Cache set error for key '{key}': {e}")
+
+
+def safe_cache_get_many(keys):
+    try:
+        return cache.get_many(keys)
+    except Exception as e:
+        logger.warning(f"Cache get_many error for {len(keys)} keys: {e}")
+        return {}
+
+
+def register_active_tokens(new_tokens: set):
+    try:
+        now = int(time.time())
+        cutoff = now - CACHE_TTL
+
+        registry = safe_cache_get(GLOBAL_TOKENS_KEY, {}) or {}
+        registry = {tok: seen for tok, seen in registry.items() if seen >= cutoff}
+
+        for tok in new_tokens:
+            registry[tok] = now
+
+        safe_cache_set(GLOBAL_TOKENS_KEY, registry, timeout=CACHE_TTL)
+    except Exception as e:
+        logger.warning(f"Failed to register active tokens: {e}")
+
+
+def get_active_tokens() -> list:
+    try:
+        now = int(time.time())
+        cutoff = now - CACHE_TTL
+        registry = safe_cache_get(GLOBAL_TOKENS_KEY, {}) or {}
+        return [tok for tok, seen in registry.items() if seen >= cutoff]
+    except Exception as e:
+        logger.warning(f"Failed to get active tokens: {e}")
+        return []
+
+
+def get_latest_tokens_summary():
+
+    latest_ts = cache.get("latest_base_unix_time")
+    if not latest_ts:
+        return None, []
+
+    active_tokens = get_active_tokens()
+    if not active_tokens:
+        return latest_ts, []
+
+    key_to_token = {f"{token}:{latest_ts}": token for token in active_tokens}
+
+    cached_data = cache.get_many(list(key_to_token.keys()))
+
+    results = []
+    for key, token in key_to_token.items():
+        # Дані мають вигляд: [{'user_id': uid, 'count': cnt}, ...]
+        items = cached_data.get(key)
+        if items:
+            total_count = sum(i.get("count", 0) for i in items)
+            results.append({
+                "token": token,
+                "total_count": total_count,
+                "users_count": len(items),
+                "users": items
+            })
+
+    results.sort(key=lambda x: x["total_count"], reverse=True)
+
+    return latest_ts, results
+
+
+class AllSessionsUserView(APIView):
+    renderer_classes = [JSONRenderer]
+
+    def get(self, request, *args, **kwargs):
+        latest_ts, records = get_latest_tokens_summary()
+
+        if latest_ts is None:
+            return Response(
+                {"detail": "No cached data found yet."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        response_data = {
+            "base_unix_time": latest_ts,
+            "total_active_tokens": len(records),
+            "tokens": records
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class TokenCacheStatView(APIView):
@@ -40,23 +148,20 @@ class TokenCacheStatView(APIView):
     def get(self, request, *args, **kwargs):
         now = int(time.time())
         base_unix_time = now // 60 * 60 * 1000
-
         date_list = [base_unix_time - x * 60000 for x in range(24 * 60)]
-
         token_or_ip = kwargs.get("pk")
 
+        key_to_ts = {f"{token_or_ip}:{ts}": ts for ts in date_list}
+
+        cached_records = safe_cache_get_many(list(key_to_ts.keys()))
+
         result = []
-        for ts in date_list:
-            key = f"{token_or_ip}:{ts}"
-            items = cache.get(key, [])
-            if not items:
-                result.append((ts, 0))
-            else:
-                total_count = sum(i.get("count", 0) for i in items)
-                result.append((ts, total_count))
+        for key, ts in key_to_ts.items():
+            items = cached_records.get(key, []) if cached_records else []
+            total_count = sum(i.get("count", 0) for i in items) if items else 0
+            result.append((ts, total_count))
 
         result.sort(key=lambda tup: tup[0])
-
         return Response(result, status=status.HTTP_200_OK)
 
 
@@ -120,7 +225,6 @@ class GetStatView(APIView):
         incoming_ids = [s['id'] for s in filtered_sessions]
 
         with transaction.atomic():
-
             existing_sessions_dict = {
                 obj.session_id: obj
                 for obj in StatusSessionModel.objects.filter(session_id__in=incoming_ids)
@@ -173,26 +277,44 @@ class GetStatView(APIView):
         ).update(deleted_at=base_unix_time)
 
     def sync_cash(self, filtered_all_sessions, base_unix_time):
-        list_for_count = []
 
-        for session in filtered_all_sessions:
-            data_dict_items = {
-                'ip': session.get('ip'),
-                'token': session.get('token', ''),
-                'name': session.get('name'),
-                'user_id': session.get('user_id', ''),
-                'session_id': session.get('id')
-            }
-            list_for_count.append(data_dict_items)
+        if not is_memcached_available():
+            msg = "[Memcached Down] Server is unavailable, cache synchronization skipped."
+            logger.error(msg)
+            try:
+                send_message_to_tg(msg)
+            except Exception as tg_err:
+                logger.error(f"Failed to send alert to Telegram: {tg_err}")
+            return
 
-        data = unique_and_count(list_for_count)
+        try:
+            aggregated = defaultdict(lambda: defaultdict(int))
+            batch_tokens = set()
 
-        for item in data:
-            token = item.get("token")
-            if not token:
-                continue
-            key = f"{token}:{base_unix_time}"
-            existing = cache.get(key, [])
-            existing.append(item)
+            for session in filtered_all_sessions:
+                raw_token = session.get('token')
+                user_id = session.get('user_id')
+                if not raw_token or not user_id:
+                    continue
 
-            cache.set(key, existing, timeout=172800)
+                token = raw_token.split('?utc=')[0]
+                aggregated[token][user_id] += 1
+                batch_tokens.add(token)
+
+            for token, user_counts in aggregated.items():
+                key = f"{token}:{base_unix_time}"
+                records = [{'user_id': uid, 'count': cnt} for uid, cnt in user_counts.items()]
+                safe_cache_set(key, records, timeout=CACHE_TTL)
+
+            cache.set("latest_base_unix_time", base_unix_time, timeout=CACHE_TTL)
+
+            if batch_tokens:
+                register_active_tokens(batch_tokens)
+
+        except Exception as e:
+            error_msg = f"⚠️ [Cache Error] Failed to sync cache: {e}"
+            logger.error(error_msg)
+            try:
+                send_message_to_tg(error_msg)
+            except Exception as tg_err:
+                logger.error(f"Failed to send alert to Telegram: {tg_err}")
