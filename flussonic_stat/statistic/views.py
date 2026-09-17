@@ -18,6 +18,8 @@ from rest_framework.renderers import JSONRenderer
 from config.models import ServerModel
 from notify_session.models import StatusSessionModel
 from statistic.serializers import SessionSerializer
+from utils.is_memcached_available import is_memcached_available
+from utils.safe_cache import safe_cache_set, safe_cache_get, safe_cache_get_many
 
 from utils.tg_send_message import send_message_to_tg
 
@@ -25,40 +27,6 @@ logger = logging.getLogger(__name__)
 
 GLOBAL_TOKENS_KEY = "active_tokens_registry"
 CACHE_TTL = 172800  # 48 hours
-
-
-def is_memcached_available() -> bool:
-    try:
-        ping_key = "__healthcheck_ping__"
-        cache.set(ping_key, "pong", timeout=10)
-        result = cache.get(ping_key)
-        return result == "pong"
-    except Exception as e:
-        logger.warning(f"Healthcheck error: {e}")
-        return False
-
-
-def safe_cache_get(key, default=None):
-    try:
-        return cache.get(key, default)
-    except Exception as e:
-        logger.warning(f"Cache get error for key '{key}': {e}")
-        return default
-
-
-def safe_cache_set(key, value, timeout=CACHE_TTL):
-    try:
-        cache.set(key, value, timeout=timeout)
-    except Exception as e:
-        logger.warning(f"Cache set error for key '{key}': {e}")
-
-
-def safe_cache_get_many(keys):
-    try:
-        return cache.get_many(keys)
-    except Exception as e:
-        logger.warning(f"Cache get_many error for {len(keys)} keys: {e}")
-        return {}
 
 
 def register_active_tokens(new_tokens: set):
@@ -89,7 +57,6 @@ def get_active_tokens() -> list:
 
 
 def get_latest_tokens_summary():
-
     latest_ts = cache.get("latest_base_unix_time")
     if not latest_ts:
         return None, []
