@@ -133,16 +133,17 @@ class TokenSessionsUserView(APIView):
         per_minute = []
         aggregated_users = defaultdict(int)
 
+        last_minute_key = f"{token}:{base_unix_time}"
+        last_minute_items = cached_records.get(last_minute_key, []) if cached_records else []
+        for i in last_minute_items:
+            user_id = i.get("user_id")
+            cnt = i.get("count", 0)
+            if user_id is not None:
+                aggregated_users[user_id] += cnt
+
         for key, ts in key_to_ts.items():
             items = cached_records.get(key, []) if cached_records else []
             minute_count = sum(i.get("count", 0) for i in items) if items else 0
-
-            for i in items:
-                user_id = i.get("user_id")
-                cnt = i.get("count", 0)
-                if user_id is not None:
-                    aggregated_users[user_id] += cnt
-
             per_minute.append({"timestamp": ts, "count": minute_count})
 
         per_minute.sort(key=lambda row: row["timestamp"])
