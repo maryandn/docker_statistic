@@ -112,7 +112,6 @@ class AllSessionsUserView(APIView):
 
 class TokenSessionsUserView(APIView):
     renderer_classes = [JSONRenderer]
-    permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):
         token = kwargs.get("pk")
