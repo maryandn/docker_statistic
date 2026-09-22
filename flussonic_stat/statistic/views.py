@@ -154,10 +154,14 @@ class TokenSessionsUserView(APIView):
         ]
         users.sort(key=lambda u: u["count"], reverse=True)
 
+        total_count = sum(row["count"] for row in per_minute)
+        avg_per_minute = round(total_count / 5, 2)
+
         response_data = {
             "token": token,
             "base_unix_time": base_unix_time,
             "window_minutes": 5,
+            "avg_per_minute": avg_per_minute,
             "users_count": len(users),
             "users": users,
             "per_minute": per_minute,
