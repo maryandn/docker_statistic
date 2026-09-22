@@ -125,7 +125,6 @@ class TokenSessionsUserView(APIView):
         now = int(time.time())
         base_unix_time = now // 60 * 60 * 1000  # current minute bucket, ms
 
-        # last 5 one-minute buckets, including the current one
         date_list = [base_unix_time - x * 60000 for x in range(5)]
         key_to_ts = {f"{token}:{ts}": ts for ts in date_list}
 
@@ -133,7 +132,6 @@ class TokenSessionsUserView(APIView):
 
         per_minute = []
         aggregated_users = defaultdict(int)
-        total_count = 0
 
         for key, ts in key_to_ts.items():
             items = cached_records.get(key, []) if cached_records else []
@@ -145,7 +143,6 @@ class TokenSessionsUserView(APIView):
                 if user_id is not None:
                     aggregated_users[user_id] += cnt
 
-            total_count += minute_count
             per_minute.append({"timestamp": ts, "count": minute_count})
 
         per_minute.sort(key=lambda row: row["timestamp"])
@@ -160,7 +157,6 @@ class TokenSessionsUserView(APIView):
             "token": token,
             "base_unix_time": base_unix_time,
             "window_minutes": 5,
-            "total_count": total_count,
             "users_count": len(users),
             "users": users,
             "per_minute": per_minute,
