@@ -28,6 +28,28 @@ logger = logging.getLogger(__name__)
 GLOBAL_TOKENS_KEY = "active_tokens_registry"
 CACHE_TTL = 172800  # 48 hours
 
+WINDOW = 5
+MINUTE_MS = 60_000
+
+
+def window_timestamps(now=None):
+    now = int(now or time.time())
+    last_full = (now // 60 - 1) * MINUTE_MS
+    return [last_full - i * MINUTE_MS for i in range(WINDOW)]
+
+
+def minute_total(items):
+    return sum(i.get('count', 0) for i in items or [])
+
+
+def window_stats(counts):
+    s = sorted(counts)
+    return {
+        'avg_per_minute': round(sum(counts) / len(counts), 2),
+        'median_per_minute': s[len(s) // 2],
+        'max_per_minute': s[-1],
+    }
+
 
 def register_active_tokens(new_tokens: set):
     try:
@@ -114,60 +136,68 @@ class TokenSessionsUserView(APIView):
     renderer_classes = [JSONRenderer]
 
     def get(self, request, *args, **kwargs):
-        token = kwargs.get("pk")
-
+        token = kwargs.get('pk')
         if not token:
-            return Response(
-                {"detail": "Token is required."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'detail': 'Token is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        now = int(time.time())
-        base_unix_time = now // 60 * 60 * 1000  # current minute bucket, ms
+        ts_list = window_timestamps()
+        key_to_ts = {f'{token}:{ts}': ts for ts in ts_list}
+        cached = safe_cache_get_many(list(key_to_ts)) or {}
 
-        date_list = [base_unix_time - x * 60000 for x in range(5)]
-        key_to_ts = {f"{token}:{ts}": ts for ts in date_list}
+        per_minute = sorted(
+            ({'timestamp': ts, 'count': minute_total(cached.get(key))} for key, ts in key_to_ts.items()),
+            key=lambda row: row['timestamp'],
+        )
 
-        cached_records = safe_cache_get_many(list(key_to_ts.keys()))
-
-        per_minute = []
         aggregated_users = defaultdict(int)
+        for i in cached.get(f'{token}:{ts_list[0]}') or []:      # остання завершена хвилина
+            uid = i.get('user_id')
+            if uid is not None:
+                aggregated_users[uid] += i.get('count', 0)
 
-        last_minute_key = f"{token}:{base_unix_time}"
-        last_minute_items = cached_records.get(last_minute_key, []) if cached_records else []
-        for i in last_minute_items:
-            user_id = i.get("user_id")
-            cnt = i.get("count", 0)
-            if user_id is not None:
-                aggregated_users[user_id] += cnt
+        users = sorted(
+            ({'user_id': uid, 'count': cnt} for uid, cnt in aggregated_users.items()),
+            key=lambda u: u['count'], reverse=True,
+        )
 
-        for key, ts in key_to_ts.items():
-            items = cached_records.get(key, []) if cached_records else []
-            minute_count = sum(i.get("count", 0) for i in items) if items else 0
-            per_minute.append({"timestamp": ts, "count": minute_count})
+        return Response({
+            'token': token,
+            'base_unix_time': ts_list[0],
+            'window_minutes': WINDOW,
+            **window_stats([row['count'] for row in per_minute]),
+            'users_count': len(users),
+            'users': users,
+            'per_minute': per_minute,
+        }, status=status.HTTP_200_OK)
 
-        per_minute.sort(key=lambda row: row["timestamp"])
 
-        users = [
-            {"user_id": uid, "count": cnt}
-            for uid, cnt in aggregated_users.items()
-        ]
-        users.sort(key=lambda u: u["count"], reverse=True)
+class OverLimitTokensView(APIView):
+    renderer_classes = [JSONRenderer]
 
-        total_count = sum(row["count"] for row in per_minute)
-        avg_per_minute = total_count // 5
+    def get(self, request, *args, **kwargs):
+        try:
+            threshold = int(request.GET.get('threshold', 2))
+        except ValueError:
+            threshold = 2
 
-        response_data = {
-            "token": token,
-            "base_unix_time": base_unix_time,
-            "window_minutes": 5,
-            "avg_per_minute": avg_per_minute,
-            "users_count": len(users),
-            "users": users,
-            "per_minute": per_minute,
-        }
+        latest_ts, records = get_latest_tokens_summary()
+        ts_list = window_timestamps()
+        base = {'base_unix_time': ts_list[0], 'window_minutes': WINDOW, 'threshold': threshold}
 
-        return Response(response_data, status=status.HTTP_200_OK)
+        if latest_ts is None:
+            return Response({**base, 'tokens': []}, status=status.HTTP_200_OK)
+
+        candidates = {r['token'] for r in records}
+        keys = [f'{t}:{ts}' for t in candidates for ts in ts_list]
+        cached = safe_cache_get_many(keys) or {} if keys else {}
+
+        tokens = []
+        for t in candidates:
+            stats = window_stats([minute_total(cached.get(f'{t}:{ts}')) for ts in ts_list])
+            if stats['median_per_minute'] > threshold:
+                tokens.append({'token': t, **stats})
+
+        return Response({**base, 'tokens': tokens}, status=status.HTTP_200_OK)
 
 
 class TokenCacheStatView(APIView):
