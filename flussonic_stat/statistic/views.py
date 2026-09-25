@@ -30,6 +30,7 @@ CACHE_TTL = 172800  # 48 hours
 
 WINDOW = 5
 MINUTE_MS = 60_000
+DEFAULT_THRESHOLD = 2
 
 
 def window_timestamps(now=None):
@@ -176,20 +177,20 @@ class OverLimitTokensView(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            threshold = int(request.GET.get('threshold', 2))
+            threshold = int(request.GET.get('threshold', DEFAULT_THRESHOLD))
         except ValueError:
-            threshold = 2
+            threshold = DEFAULT_THRESHOLD
 
         latest_ts, records = get_latest_tokens_summary()
         ts_list = window_timestamps()
         base = {'base_unix_time': ts_list[0], 'window_minutes': WINDOW, 'threshold': threshold}
 
         if latest_ts is None:
-            return Response({**base, 'tokens': []}, status=status.HTTP_200_OK)
+            return Response({**base, 'total': 0, 'tokens': []}, status=status.HTTP_200_OK)
 
         candidates = {r['token'] for r in records}
         keys = [f'{t}:{ts}' for t in candidates for ts in ts_list]
-        cached = safe_cache_get_many(keys) or {} if keys else {}
+        cached = (safe_cache_get_many(keys) or {}) if keys else {}
 
         tokens = []
         for t in candidates:
@@ -197,7 +198,12 @@ class OverLimitTokensView(APIView):
             if stats['median_per_minute'] > threshold:
                 tokens.append({'token': t, **stats})
 
-        return Response({**base, 'tokens': tokens}, status=status.HTTP_200_OK)
+        tokens.sort(
+            key=lambda x: (x['median_per_minute'], x['max_per_minute'], x['avg_per_minute']),
+            reverse=True,
+        )
+
+        return Response({**base, 'total': len(tokens), 'tokens': tokens}, status=status.HTTP_200_OK)
 
 
 class TokenCacheStatView(APIView):
