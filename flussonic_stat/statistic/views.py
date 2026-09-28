@@ -89,8 +89,9 @@ def get_latest_tokens_summary():
     if not active_tokens:
         return latest_ts, []
     send_message_to_tg('latest ts Yes')
-    key_to_token = {f"{token}:{latest_ts}": token for token in active_tokens}
     cached_data = cache.get_many(list(key_to_token.keys()))
+    key_to_token = {f"{token}:{latest_ts}": token for token in active_tokens}
+    send_message_to_tg('latest ts END')
 
     results = []
     for key, token in key_to_token.items():
@@ -107,7 +108,6 @@ def get_latest_tokens_summary():
                 "users_count": len(items),
                 "users": items
             })
-    send_message_to_tg('latest ts END')
     results.sort(key=lambda x: x["total_count"], reverse=True)
 
     return latest_ts, results
