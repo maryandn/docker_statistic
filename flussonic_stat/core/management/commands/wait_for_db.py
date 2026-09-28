@@ -40,7 +40,7 @@ class Command(BaseCommand):
             return
 
         host = settings.DATABASES['default']['HOST']
-        env = {**os.environ, 'MYSQL_PWD': MYSQL_ROOT_PASSWORD_PRODUCTIONS}   # пароль не в аргументах
+        env = {**os.environ, 'MYSQL_PWD': MYSQL_ROOT_PASSWORD_PRODUCTIONS}
 
         with open(BACKUP_FILE, 'rb') as file:
             result = subprocess.run(['mysql', '-h', host, '-u', 'root'], stdin=file, env=env)
