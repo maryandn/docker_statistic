@@ -80,15 +80,15 @@ def get_active_tokens() -> list:
 
 
 def get_latest_tokens_summary():
+
     latest_ts = cache.get("latest_base_unix_time")
+
     if not latest_ts:
-        send_message_to_tg('latest ts Yes')
         return None, []
     active_tokens = get_active_tokens()
-    send_message_to_tg(active_tokens)
     if not active_tokens:
         return latest_ts, []
-
+    send_message_to_tg('latest ts Yes')
     key_to_token = {f"{token}:{latest_ts}": token for token in active_tokens}
     cached_data = cache.get_many(list(key_to_token.keys()))
 
@@ -107,7 +107,7 @@ def get_latest_tokens_summary():
                 "users_count": len(items),
                 "users": items
             })
-
+    send_message_to_tg('latest ts END')
     results.sort(key=lambda x: x["total_count"], reverse=True)
 
     return latest_ts, results
@@ -153,7 +153,7 @@ class TokenSessionsUserView(APIView):
         )
 
         aggregated_users = defaultdict(int)
-        for i in cached.get(f'{token}:{ts_list[0]}') or []:      # остання завершена хвилина
+        for i in cached.get(f'{token}:{ts_list[0]}') or []:  # остання завершена хвилина
             uid = i.get('user_id')
             if uid is not None:
                 aggregated_users[uid] += i.get('count', 0)
