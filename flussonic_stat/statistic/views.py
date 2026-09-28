@@ -58,6 +58,7 @@ def register_active_tokens(new_tokens: set):
         cutoff = now - CACHE_TTL
 
         registry = safe_cache_get(GLOBAL_TOKENS_KEY, {}) or {}
+        send_message_to_tg(registry)
         registry = {tok: seen for tok, seen in registry.items() if seen >= cutoff}
 
         for tok in new_tokens:
@@ -89,13 +90,8 @@ def get_latest_tokens_summary():
     if not active_tokens:
         return latest_ts, []
 
-    send_message_to_tg('latest ts Yes')
-
     key_to_token = {f"{token}:{latest_ts}": token for token in active_tokens}
-    send_message_to_tg(key_to_token)
     cached_data = cache.get_many(list(key_to_token.keys()))
-
-    send_message_to_tg('latest ts End')
 
     results = []
     for key, token in key_to_token.items():
@@ -258,7 +254,7 @@ class GetStatView(APIView):
             return []
 
     def get(self, request, *args, **kwargs):
-        send_message_to_tg('Getstat')
+
         base_unix_time = int(time.time() // 60 * 60 * 1000)
         list_server = list(ServerModel.objects.all().values('ip', 'url'))
 
@@ -379,7 +375,7 @@ class GetStatView(APIView):
                 safe_cache_set(key, records, timeout=CACHE_TTL)
 
             cache.set("latest_base_unix_time", base_unix_time, timeout=CACHE_TTL)
-            send_message_to_tg(cache.get("latest_base_unix_time"))
+
             if batch_tokens:
                 register_active_tokens(batch_tokens)
 
