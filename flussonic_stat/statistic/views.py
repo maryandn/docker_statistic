@@ -254,7 +254,7 @@ class GetStatView(APIView):
             return []
 
     def get(self, request, *args, **kwargs):
-
+        send_message_to_tg('Getstat')
         base_unix_time = int(time.time() // 60 * 60 * 1000)
         list_server = list(ServerModel.objects.all().values('ip', 'url'))
 
