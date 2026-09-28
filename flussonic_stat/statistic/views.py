@@ -84,8 +84,8 @@ def get_latest_tokens_summary():
     if not latest_ts:
         send_message_to_tg('latest ts Yes')
         return None, []
-    send_message_to_tg('latest ts None')
     active_tokens = get_active_tokens()
+    send_message_to_tg(latest_ts)
     if not active_tokens:
         return latest_ts, []
 
