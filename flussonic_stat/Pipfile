@@ -13,6 +13,7 @@ mysqlclient = "*"
 django-rest-multiple-models = "*"
 pymemcache = "*"
 httpx = "*"
+gunicorn = "*"
 
 [dev-packages]
 
