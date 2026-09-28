@@ -374,7 +374,6 @@ class GetStatView(APIView):
                 safe_cache_set(key, records, timeout=CACHE_TTL)
 
             cache.set("latest_base_unix_time", base_unix_time, timeout=CACHE_TTL)
-            send_message_to_tg(batch_tokens)
             if batch_tokens:
                 register_active_tokens(batch_tokens)
 
