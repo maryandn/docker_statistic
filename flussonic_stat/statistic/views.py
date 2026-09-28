@@ -58,7 +58,6 @@ def register_active_tokens(new_tokens: set):
         cutoff = now - CACHE_TTL
 
         registry = safe_cache_get(GLOBAL_TOKENS_KEY, {}) or {}
-        send_message_to_tg(registry)
         registry = {tok: seen for tok, seen in registry.items() if seen >= cutoff}
 
         for tok in new_tokens:
@@ -375,7 +374,7 @@ class GetStatView(APIView):
                 safe_cache_set(key, records, timeout=CACHE_TTL)
 
             cache.set("latest_base_unix_time", base_unix_time, timeout=CACHE_TTL)
-
+            send_message_to_tg(batch_tokens)
             if batch_tokens:
                 register_active_tokens(batch_tokens)
 
