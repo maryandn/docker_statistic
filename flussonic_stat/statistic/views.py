@@ -182,7 +182,7 @@ class OverLimitTokensView(APIView):
             threshold = int(request.GET.get('threshold', DEFAULT_THRESHOLD))
         except ValueError:
             threshold = DEFAULT_THRESHOLD
-
+        send_message_to_tg('overlimit')
         latest_ts, records = get_latest_tokens_summary()
         ts_list = window_timestamps()
         base = {'base_unix_time': ts_list[0], 'window_minutes': WINDOW, 'threshold': threshold}
