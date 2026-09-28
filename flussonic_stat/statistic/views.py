@@ -82,16 +82,21 @@ def get_active_tokens() -> list:
 def get_latest_tokens_summary():
 
     latest_ts = cache.get("latest_base_unix_time")
-
     if not latest_ts:
         return None, []
+
     active_tokens = get_active_tokens()
     if not active_tokens:
         return latest_ts, []
+
     send_message_to_tg('latest ts Yes')
+
     key_to_token = {f"{token}:{latest_ts}": token for token in active_tokens}
+    send_message_to_tg(key_to_token)
     cached_data = cache.get_many(list(key_to_token.keys()))
+
     send_message_to_tg('latest ts End')
+
     results = []
     for key, token in key_to_token.items():
         items = cached_data.get(key)
