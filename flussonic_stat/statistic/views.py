@@ -82,8 +82,9 @@ def get_active_tokens() -> list:
 def get_latest_tokens_summary():
     latest_ts = cache.get("latest_base_unix_time")
     if not latest_ts:
+        send_message_to_tg('latest ts Yes')
         return None, []
-
+    send_message_to_tg('latest ts None')
     active_tokens = get_active_tokens()
     if not active_tokens:
         return latest_ts, []
@@ -182,7 +183,6 @@ class OverLimitTokensView(APIView):
             threshold = int(request.GET.get('threshold', DEFAULT_THRESHOLD))
         except ValueError:
             threshold = DEFAULT_THRESHOLD
-        send_message_to_tg('latest ts None')
 
         latest_ts, records = get_latest_tokens_summary()
         ts_list = window_timestamps()
