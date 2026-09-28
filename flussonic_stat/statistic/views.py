@@ -114,6 +114,7 @@ def get_latest_tokens_summary():
 
 class AllSessionsUserView(APIView):
     renderer_classes = [JSONRenderer]
+    permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):
         latest_ts, records = get_latest_tokens_summary()
@@ -174,6 +175,7 @@ class TokenSessionsUserView(APIView):
 
 class OverLimitTokensView(APIView):
     renderer_classes = [JSONRenderer]
+    permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):
         try:
